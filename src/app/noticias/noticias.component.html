@@ -1,0 +1,31 @@
+<div class="contenedor">
+  <h2 *ngIf="usuarioLogueado; else sinUsuario">
+    📰 ¡Hola {{ usuarioLogueado.nombre || usuarioLogueado.correo }}!, estas son las noticias sobre Reciclaje
+  </h2>
+
+  <ng-template #sinUsuario>
+    <h2>📰 Noticias sobre Reciclaje</h2>
+  </ng-template>
+
+  <div class="botones">
+    <button (click)="mostrarNoticia('internacional')">🌎 Internacional</button>
+    <button (click)="mostrarNoticia('nacional')">🇵🇪 Nacional</button>
+    <button (click)="mostrarNoticia('regional')">🗺️ Regional</button>
+    <button (click)="mostrarNoticia('local')">🏘️ Local</button>
+  </div>
+
+  <!-- Sub-botones para noticias locales -->
+<div class="sub-botones" *ngIf="mostrarLocales">
+  <button (click)="mostrarNoticia('paijan')">📍 Paiján</button>
+  <button (click)="mostrarNoticia('trujillo')">🏙️ Trujillo</button>
+</div>
+
+
+  <iframe
+    [src]="urlActual | safeUrl"
+    class="visor"
+    frameborder="0"
+    loading="lazy"
+    allowfullscreen>
+  </iframe>
+</div>

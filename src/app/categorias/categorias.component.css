@@ -1,0 +1,155 @@
+:host {
+  display: block;
+  padding: 2rem;
+  background-color: #f4f7f6;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Título */
+.titulo {
+  text-align: left;
+  font-size: 2.5rem;
+  color: #2d6a4f;
+  margin-bottom: 1.5rem;
+}
+
+/* Contenedor de tarjetas */
+.contenedor-categorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3rem 4rem; /* 🔁 vertical horizontal */
+  justify-content: flex-start;
+}
+
+
+/* Tarjeta */
+.tarjeta-categoria {
+  background-color: white;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 300px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Zoom suave al pasar el mouse  
+.tarjeta-categoria:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+} */
+
+/* Imagen */
+.icono-categoria {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin: 0;
+  transition: transform 0.3s ease-in-out;
+}
+
+ .icono-categoria:hover {
+  transform: scale(1.1);
+} 
+
+/* Contenido interno horizontal (imagen + texto) */
+.contenido-interno {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
+/* Texto */
+.contenido-texto h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  color: #2d6a4f;
+}
+
+.contenido-texto p {
+  margin: 0;
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Estructura flip */
+.tarjeta-wrapper {
+  perspective: 1000px;
+  width: 350px;
+  height: 220px;
+  margin-bottom: 2rem;
+
+  /* ✅ Estabilidad de posición */
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.tarjeta-flip {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+
+  /* ✅ Forzar tamaño fijo para evitar saltos */
+  min-height: 100%;
+
+  backface-visibility: hidden; /* Esto oculta la tarjeta entera si su "espalda" está hacia el espectador */
+  -webkit-backface-visibility: hidden;
+  will-change: transform; /* Mantenlo aquí */
+}
+
+
+.tarjeta-flip.volteado {
+  transform: rotateY(180deg);
+}
+
+.tarjeta-front,
+.tarjeta-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 1rem;
+  box-sizing: border-box; /* ✅ importante para mantener tamaño al agregar padding */
+  top: 0;
+  left: 0;
+}
+
+
+.tarjeta-front {
+  background-color: #ffffff;
+}
+
+.tarjeta-back {
+  transform: rotateY(180deg);
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Imagen de carrusel */
+.imagen-carousel {
+  width: 90%;
+  height: 90%;
+  object-fit: cover;
+  border-radius: 8px;
+
+  will-change: transform, opacity; /* Sigue siendo útil para la animación */
+}
+
+
+.carrusel-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+

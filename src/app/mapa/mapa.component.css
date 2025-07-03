@@ -1,0 +1,262 @@
+/* ========================
+   VARIABLES DE COLOR
+======================== */
+:root {
+  --color-bg: #ffffff;
+  --color-card: #ffffff;
+  --color-text: #1f1f1f;
+  --color-input-bg: #f1f3f4;
+  --color-border: #e0e0e0;
+  --color-button: #1a73e8;
+  --color-button-hover: #0c59cf;
+}
+
+/* Fallback en caso no cargue el tema aún */
+html, body {
+  --color-bg: #ffffff;
+  --color-card: #ffffff;
+  --color-text: #1f1f1f;
+  --color-input-bg: #f1f3f4;
+  --color-border: #e0e0e0;
+  --color-button: #1a73e8;
+  --color-button-hover: #0c59cf;
+
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ========================
+   ESTILOS GENERALES
+======================== */
+#map {
+  height: 400px;
+  width: 100%;
+}
+
+.theme-toggle-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 1rem 2rem 0;
+}
+
+.theme-label {
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text, #1f1f1f);
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.card {
+  background-color: var(--color-card, #ffffff);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  transition: background 0.3s;
+}
+
+.title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-text, #1f1f1f);
+}
+
+.input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.input-prompt {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 8px;
+  background-color: var(--color-input-bg, #f1f3f4);
+  font-size: 1rem;
+  color: var(--color-text, #1f1f1f);
+}
+
+/* Botón principal (Ej: Enviar) */
+.main-btn {
+  padding: 0.75rem 1rem;
+  background-color: var(--color-button, #1a73e8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+.main-btn:hover {
+  background-color: var(--color-button-hover, #0c59cf);
+}
+
+/* Botones de rutas */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.button-group button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-button, #1a73e8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.button-group button:hover {
+  background-color: var(--color-button-hover, #0c59cf);
+}
+
+/* Mapa */
+.map-container {
+  margin-top: 2rem;
+  width: 100%;
+  height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Switch de modo oscuro */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--color-button, #1a73e8);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Mensaje de resultado natural */
+.mensaje-natural {
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: var(--color-text, #1f1f1f);
+  background-color: var(--color-card, #ffffff);
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--color-button, #1a73e8);
+  border-radius: 8px;
+}
+
+
+
+.conversacion {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.mensaje {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 15px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.mensaje.usuario {
+  background-color: #4caf50;
+  color: white;
+  margin-left: auto;
+  text-align: right;
+}
+
+.mensaje.ia {
+  background-color: #e0e0e0;
+  color: #333;
+  margin-right: auto;
+  text-align: left;
+}
+
+
+
+/* Add this to your existing CSS or create it if it doesn't exist */
+.mensaje.ia::after {
+  content: '|'; /* The cursor character */
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink-caret 0.75s step-end infinite;
+}
+
+/* Ensure only the *last* AI message has the blinking cursor */
+.conversacion .mensaje.ia:not(:last-child)::after {
+  content: none; /* Hide cursor on completed messages */
+}
+
+@keyframes blink-caret {
+  from,
+  to {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* --- Estilos para negritas dentro de los mensajes de la IA --- */
+.conversacion .mensaje.ia {
+  /* Permite que los elementos en línea se muestren correctamente */
+  white-space: pre-wrap; /* Mantiene saltos de línea y espacios */
+  word-wrap: break-word; /* Rompe palabras largas para evitar desbordamiento */
+}
+
+.conversacion .mensaje.ia b {
+  font-weight: bold;
+}

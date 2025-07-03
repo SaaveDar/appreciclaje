@@ -1,0 +1,21 @@
+<div class="perfil-contenedor">
+  <h2>👤 Bienvenido, {{ nombreUsuario }}</h2>
+
+  <div class="stats">
+    <p>🏆 Puntaje total: <strong>{{ puntaje }}</strong></p>
+    <p>🎯 Nivel actual: <strong>{{ nivel }}</strong></p>
+    <p>🥇 Medallas obtenidas: <span style="font-size: 1.5rem;">{{ medallas }}</span></p>
+  </div>
+
+  <div class="cursos-canje">
+    <h3>🎓 Cursos disponibles para canjear</h3>
+    <ul *ngIf="cursosDisponibles.length > 0; else sinCursos">
+      <li *ngFor="let curso of cursosDisponibles">
+        ✅ {{ curso }}
+      </li>
+    </ul>
+    <ng-template #sinCursos>
+      <p>❌ Aún no tienes puntos suficientes para canjear cursos.</p>
+    </ng-template>
+  </div>
+</div>

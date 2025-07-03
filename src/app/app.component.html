@@ -1,0 +1,177 @@
+<!-- Botón de menú hamburguesa SOLO en móviles -->
+<button class="menu-toggle" (click)="toggleSidebar()">☰</button>
+
+<!-- Menú horizontal en pantallas grandes -->
+<nav class="topnav">
+  <ul class="menu-centro">
+    <li><a routerLink="/">INICIO</a></li>
+    <li><a routerLink="/categorias">CATEGORÍAS</a></li>
+    <!-- Los enlaces a MAPA y JUEGO solo se mostrarán si el usuario está logueado -->
+    <li *ngIf="usuarioLogueado"><a routerLink="/mapa">MAPA</a></li>
+    <li *ngIf="usuarioLogueado"><a routerLink="/juego">JUEGO</a></li>
+    <li><a routerLink="/noticias">NOTICIAS</a></li>
+  </ul>
+
+  <div class="login-wrapper">
+    <!-- Contenedor para el botón de Iniciar Sesión cuando NO hay usuario logueado -->
+    <ng-container *ngIf="!usuarioLogueado; else bienvenido">
+      <button class="login-btn" (click)="abrirModal()">
+        <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Login Icon" class="icono-btn" />
+        Iniciar sesión
+      </button>
+    </ng-container>
+
+    <!-- Plantilla que se muestra cuando el usuario SÍ está logueado -->
+    <ng-template #bienvenido>
+      <div class="usuario-bienvenido">
+        <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="User Icon" class="avatar-usuario" />
+        
+        <div class="texto-bienvenida" (click)="toggleMenu()" style="cursor: pointer;">
+          <!-- Se asume que usuarioLogueado.nombre existe, si no, puedes usar usuarioLogueado.correo -->
+          <p class="saludo">¡Bienvenido,</p>
+          <p class="nombre-usuario">{{ usuarioLogueado.nombre || usuarioLogueado.correo }}</p>
+        </div>
+
+        <!-- Menú desplegable del usuario (Cambiar contraseña, Cerrar sesión) -->
+        <div class="menu-usuario" *ngIf="menuVisible">
+           <button class="btn-opcion" (click)="irAPerfil()">Mi perfil</button>
+          <button class="btn-opcion" (click)="cambiarContrasena()">Cambiar contraseña</button>
+          <button class="btn-opcion cerrar" (click)="cerrarSesion()">Cerrar sesión</button>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</nav>
+
+<!-- Sidebar solo en móviles -->
+<nav class="sidebar" [class.open]="sidebarOpen">
+  <button class="close-btn" (click)="toggleSidebar()">✖</button>
+  <ul>
+    <li><a routerLink="/" (click)="toggleSidebar()">INICIO</a></li>
+    <li><a routerLink="/categorias" (click)="toggleSidebar()">CATEGORÍAS</a></li>
+    <!-- Los enlaces a MAPA y JUEGO en el sidebar solo se mostrarán si el usuario está logueado -->
+    <li *ngIf="usuarioLogueado"><a routerLink="/mapa" (click)="toggleSidebar()">MAPA</a></li>
+    <li *ngIf="usuarioLogueado"><a routerLink="/juego" (click)="toggleSidebar()">JUEGO</a></li>
+    <li><a routerLink="/noticias" (click)="toggleSidebar()">NOTICIAS</a></li>
+
+    <!-- Sección de usuario en el sidebar -->
+    <li style="padding: 0; margin: 0;">
+      <div class="usuario-sidebar">
+        
+        <!-- 👉 Usuario no logueado: Muestra el botón de Iniciar Sesión -->
+        <div class="info-usuario" *ngIf="!usuarioLogueado" (click)="abrirModal()" style="cursor: pointer;">
+          <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="icono login" class="icono-usuario" />
+          <div class="datos-usuario">
+            <span class="nombre-usuario">Iniciar sesión</span>
+          </div>
+        </div>
+
+        <!-- 👤 Usuario logueado: Muestra la información del usuario y su submenú -->
+        <div *ngIf="usuarioLogueado">
+          <div class="info-usuario" (click)="toggleSidebarMenu()" style="cursor: pointer;">
+            <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" class="icono-usuario" />
+            <div class="datos-usuario">
+              <!-- Se asume que usuarioLogueado.nombre existe, si no, puedes usar usuarioLogueado.correo -->
+              <span class="nombre-usuario">{{ usuarioLogueado.nombre || usuarioLogueado.correo }}</span>
+            </div>
+          </div>
+
+          <!-- 🔽 Submenú del usuario en el sidebar -->
+          <div class="submenu-opciones" *ngIf="menuVisibleSidebar">
+             <button class="btn-opcion" (click)="irAPerfil()">Mi perfil</button>
+            <button class="btn-opcion" (click)="cambiarContrasena()">Cambiar contraseña</button>
+            <button class="btn-opcion cerrar" (click)="cerrarSesion()">Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </li>
+  </ul>
+</nav>
+
+
+<!-- Contenido de la app (Aquí se cargan los componentes de las rutas) -->
+<router-outlet></router-outlet>
+
+<!-- Modal de Login/Registro -->
+<div class="modal-backdrop" *ngIf="modalAbierto"></div>
+
+<div class="modal" *ngIf="modalAbierto">
+  <!-- Botón X para cerrar el modal -->
+  <button class="modal-close" (click)="cerrarModal()">✖</button>
+
+  <div class="modal-contenido">
+    <div class="icono-login">
+      <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="login icon" />
+    </div>
+
+    <h2 *ngIf="modo === 'login'">Iniciar Sesión</h2>
+    <h2 *ngIf="modo === 'registro'">Crear Cuenta</h2>
+
+    <!-- Formulario de Login -->
+    <form *ngIf="modo === 'login'" (ngSubmit)="login()" class="formulario-login" autocomplete="off">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" [(ngModel)]="loginEmail" name="email" required />
+
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" [(ngModel)]="loginPassword" name="password" required />
+
+      <button type="submit" class="btn-ingresar">Ingresar</button>
+      
+    </form>
+
+    <!-- Formulario de Registro -->
+    <form *ngIf="modo === 'registro'" (ngSubmit)="registrar()" class="formulario-login" autocomplete="off">
+      <label for="nombre">Nombre completo</label>
+      <input type="text" id="nombre" [(ngModel)]="registroNombre" name="nombre" required />
+
+      <label for="correo">Correo electrónico</label>
+      <input type="email" id="correo" [(ngModel)]="registroCorreo" name="correo" required />
+
+      <label for="clave">Contraseña</label>
+      <input type="password" id="clave" [(ngModel)]="registroClave" name="clave" required />
+
+      <!-- El input de ubicación se mantiene como hidden según tu código original -->
+      <input type="hidden" id="ubicacion" [(ngModel)]="registroUbicacion" name="ubicacion" required />
+
+      <button type="submit" class="btn-ingresar">Registrar</button>
+    </form>
+
+    <!-- Botón Google solo en login -->
+    <button *ngIf="modo === 'login'" class="google-btn" type="button">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+      Continuar con Google
+    </button>
+
+    <!-- Opciones para cambiar entre Login y Registro -->
+    <p class="texto-secundario">
+      <ng-container *ngIf="modo === 'login'">
+        ¿No tienes cuenta?
+        <!--<a href="#" (click)="modo = 'registro'; $event.preventDefault()">Regístrate</a>-->
+        <a href="#" (click)="cambiarAModoRegistro(); $event.preventDefault()">Regístrate</a>
+      </ng-container>
+      <ng-container *ngIf="modo === 'registro'">
+        ¿Ya tienes cuenta?
+        <!--<a href="#" (click)="modo = 'login'; $event.preventDefault()">Inicia sesión</a>-->
+        <a href="#" (click)="cambiarAModoLogin(); $event.preventDefault()">Inicia sesión</a>
+      </ng-container>
+    </p>
+
+    <!-- Mensaje de error debajo de las opciones de login/registro -->
+    <span *ngIf="mensajeError" style="color: red; font-weight: bold; display: block; text-align: center; margin-top: 0.5rem;">
+      {{ mensajeError }}
+    </span>
+
+  </div>
+</div>
+
+
+<!-- Modal de Registro Exitoso (se muestra brevemente) -->
+<div class="modal-exito" *ngIf="registroExitoso">
+  ✅ Usuario registrado correctamente
+</div>
+
+
+<!-- Footer de la aplicación -->
+<footer style="background-color: #333; color: white; padding: 1rem; text-align: center; margin-top: auto;">
+  © 2025 EcoRecicla. Todos los derechos reservados.
+</footer>

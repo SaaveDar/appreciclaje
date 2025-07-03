@@ -1,0 +1,82 @@
+<section class="hero">
+  <div class="slider-container">
+    <button class="nav prev" (click)="prevSlide()">&#10094;</button>
+    <div class="slider">
+      <div class="slide" *ngFor="let slide of slides; let i = index" [class.active]="i === currentSlide">
+        <img [src]="slide.imagen" [alt]="slide.titulo">
+        <div class="descripcion">
+          <h2>{{ slide.titulo }}</h2>
+          <p>{{ slide.descripcion }}</p>
+        </div>
+      </div>
+    </div>
+    <button class="nav next" (click)="nextSlide()">&#10095;</button>
+  </div>
+
+  <!-- Indicadores de slide -->
+<div class="slide-indicators">
+  <span
+    *ngFor="let slide of slides; let i = index"
+    class="dot"
+    [class.active]="i === currentSlide"
+    (click)="goToSlide(i)">
+  </span>
+</div>
+
+
+  <div class="info">
+    <h1>🌍 Bienvenido a EcoRecicla</h1>
+    <p>Una app web inteligente que promueve el reciclaje y el cuidado del medio ambiente.</p>
+  </div>
+</section>
+
+<section class="info-app">
+  <h2>¿Qué es EcoRecicla?</h2>
+  <p>
+    EcoRecicla es una aplicación educativa e interactiva que promueve el reciclaje inteligente y la conciencia ambiental. A través de funciones inteligentes, ayudamos a las personas a identificar, clasificar y gestionar residuos correctamente.
+  </p>
+</section>
+
+<section class="caracteristicas">
+  <h2>¿Qué puedes hacer con EcoRecicla?</h2>
+  <div class="cards">
+    <div class="card">
+      <img src="/assets/icons/mapa.png" alt="Mapa">
+      <h3>Puntos de Reciclaje</h3>
+      <p>Encuentra el punto más cercano donde puedes dejar tus residuos.</p>
+    </div>
+    <div class="card">
+      <img src="/assets/icons/categorias.png" alt="Residuos">
+      <h3>Tipos de Residuos</h3>
+      <p>Aprende a clasificar correctamente los residuos con imágenes reales.</p>
+    </div>
+    <div class="card">
+      <img src="/assets/icons/juego.jpg" alt="Juego">
+      <h3>Juego Educativo</h3>
+      <p>Juega y pon a prueba tus conocimientos sobre reciclaje.</p>
+    </div>
+  </div>
+</section>
+
+<section class="impacto">
+  <h2>Nuestro impacto</h2>
+  <div class="stats">
+    <div>
+      <h3>+500</h3>
+      <p>Usuarios concientizados</p>
+    </div>
+    <div>
+      <h3>+120</h3>
+      <p>Puntos de reciclaje activos</p>
+    </div>
+    <div>
+      <h3>+20%</h3>
+      <p>Reducción de residuos en zonas urbanas</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final">
+  <h2>¿Estás listo para marcar la diferencia?</h2>
+  <button class="boton-principal" (click)="abrirRegistro()">Únete ahora</button>
+</section>

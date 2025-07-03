@@ -1,0 +1,43 @@
+<!-- Interruptor de modo oscuro -->
+<div class="theme-toggle-container">
+  <label class="switch">
+    <input type="checkbox" (change)="toggleDarkMode($event)" />
+    <span class="slider round"></span>
+  </label>
+  <span class="theme-label">Modo oscuro</span>
+</div>
+
+<!-- Contenedor principal -->
+<div class="container">
+  <div class="card">
+    <h2 class="title">GreenIA</h2>
+
+    <div class="input-group">
+      <input
+        type="text"
+        [(ngModel)]="userPrompt"
+        placeholder="¿Qué punto estratégico de reciclaje quieres ver? "
+        class="input-prompt"
+        (keyup.enter)="procesarPrompt()" [disabled]="isWaitingForResponse" />
+      <button
+        class="main-btn"
+        (click)="procesarPrompt()"
+        [disabled]="isWaitingForResponse" >
+        {{ isWaitingForResponse ? 'Detener' : 'Enviar' }} </button>
+    </div>
+
+    <div class="conversacion">
+      <div *ngFor="let msg of mensajesIA" [ngClass]="msg.tipo === 'usuario' ? 'mensaje usuario' : 'mensaje ia'">
+        <span *ngIf="msg.tipo === 'ia'" [innerHTML]="msg.texto"></span>
+        <span *ngIf="msg.tipo === 'usuario'">{{ msg.texto }}</span>
+      </div>
+    </div>
+
+
+    <div class="button-group">
+      <button class="main-btn" (click)="rutaMasCercana()" [disabled]="isWaitingForResponse">Ruta más cercana</button> <button class="main-btn" (click)="rutaEspecifica('Chocope')" [disabled]="isWaitingForResponse">Ruta a Chocope</button> </div>
+  </div>
+</div>
+
+<!-- Mapa -->
+<div id="map" class="map-container"></div>

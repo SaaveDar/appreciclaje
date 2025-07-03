@@ -1,0 +1,34 @@
+<h2 class="titulo">♻️ Categorías de Residuos</h2>
+
+<div *ngIf="cargando" class="mensaje-carga">
+  Cargando categorías...
+  </div>
+
+<div class="contenedor-categorias" *ngIf="!cargando">
+  <div class="tarjeta-wrapper" *ngFor="let tipo of tiposResiduos; trackBy: trackById">
+
+    <div class="tarjeta-flip" [class.volteado]="tarjetasVolteadas[tipo.id]" (click)="voltear(tipo.id)">
+
+      <div class="tarjeta-categoria tarjeta-front">
+        <div class="contenido-interno">
+          <img [src]="'assets/icon/' + tipo.icono_url + '.png'"
+               class="icono-categoria" />
+          <div class="contenido-texto">
+            <h3>{{ tipo.nombre }}</h3>
+            <p>{{ tipo.descripcion }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tarjeta-categoria tarjeta-back">
+        <div class="carrusel-container">
+          <img
+            [src]="'assets' + getImagenActual(tipo)" loading="lazy"
+            class="imagen-carousel slide-animation"
+            [@slideIn]="imagenIndex[tipo.id]"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

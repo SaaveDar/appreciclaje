@@ -1,0 +1,46 @@
+<div class="contenedor-juego">
+  <h2 class="titulo-juego">♻️ Clasifica Bien</h2>
+
+  <div class="puntaje-panel">
+    <p><strong>Puntaje:</strong> {{ puntaje }}</p>
+  </div>
+
+  <div class="zona-juego">
+    <div class="contenedor-residuos">
+      <h3>🧺 Selecciona un residuo</h3>
+      <div
+        class="residuo"
+        *ngFor="let residuo of residuos"
+        [class.seleccionado]="residuo === residuoSeleccionado"
+        [draggable]="!esMovil"
+        (dragstart)="iniciarArrastre($event, residuo)"
+        (click)="seleccionarResiduo(residuo)"
+      >
+        <img [src]="residuo.imagen" [alt]="residuo.nombre" />
+        <p>{{ residuo.nombre }}</p>
+      </div>
+    </div>
+
+    <div class="contenedor-tachos">
+      <h3>🚮 Elige el tacho correcto</h3>
+      <div
+        class="tacho"
+        *ngFor="let tacho of tachos"
+        (dragover)="permitirSoltar($event)"
+        (drop)="soltar($event, tacho)"
+        (click)="soltarTactil(tacho)"
+      >
+        <img [src]="'assets/tachos/' + tacho + '.png'" [alt]="tacho" />
+        <p>{{ tacho | titlecase }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mensaje-panel" *ngIf="mensaje">
+    <p [ngClass]="{ 'correcto': mensaje.startsWith('✅'), 'incorrecto': mensaje.startsWith('❌') }">
+      {{ mensaje }}
+    </p>
+  </div>
+
+  <button class="btn-reiniciar" (click)="reiniciarJuego()">🔄 Reiniciar Juego</button>
+</div>
