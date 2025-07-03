@@ -20,7 +20,8 @@ export interface TipoResiduo {
   providedIn: 'root'
 })
 export class TiposResiduosService {
-  private apiUrl = 'http://localhost:3000/api/tipos-residuos';
+  //private apiUrl = 'http://localhost:3000/api/tipos-residuos';
+  private apiUrl = 'https://comunidadvapps.com/api/tipos-residuos';
   private tiposResiduosCache: TipoResiduo[] | null = null;
   private tiposResiduos$: Observable<TipoResiduo[]> | null = null;
 
