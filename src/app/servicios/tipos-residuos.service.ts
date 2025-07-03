@@ -20,28 +20,31 @@ export interface TipoResiduo {
   providedIn: 'root'
 })
 export class TiposResiduosService {
-  //private apiUrl = 'http://localhost:3000/api/tipos-residuos';
-  private apiUrl = 'https://comunidadvapps.com/api/tipos-residuos';
+  private apiUrl = 'https://comunidadvapps.com/api.php?consulta=tipos-residuos';
+
   private tiposResiduosCache: TipoResiduo[] | null = null;
   private tiposResiduos$: Observable<TipoResiduo[]> | null = null;
 
   constructor(private http: HttpClient) {}
 
   obtenerTipos(): Observable<TipoResiduo[]> {
+    // ✔️ Si ya hay datos en caché, devolverlos
     if (this.tiposResiduosCache) {
       return of(this.tiposResiduosCache);
     }
 
+    // ✔️ Si hay una petición en curso, devolverla
     if (this.tiposResiduos$) {
       return this.tiposResiduos$;
     }
 
+    // ✔️ Hacer la solicitud a la API y guardar en caché
     this.tiposResiduos$ = this.http.get<TipoResiduo[]>(this.apiUrl).pipe(
       tap(data => {
         this.tiposResiduosCache = data;
-        this.tiposResiduos$ = null;
+        this.tiposResiduos$ = null; // Limpiar la referencia cuando termine
       }),
-      shareReplay(1)
+      shareReplay(1) // ✔️ Comparte el resultado si hay múltiples suscriptores
     );
 
     return this.tiposResiduos$;
