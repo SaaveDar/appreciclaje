@@ -42,27 +42,25 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    if (!isPlatformBrowser(this.platformId)) {
-      return; // ✅ Evitar error durante prerendering
+    if (isPlatformBrowser(this.platformId)) {
+      const usuarioGuardado = sessionStorage.getItem('usuario');
+      if (usuarioGuardado) {
+        this.usuarioLogueado = JSON.parse(usuarioGuardado);
+        this.isLoggedIn = true;
+      }
+
+      this.router.events
+        .pipe(filter(event => event instanceof NavigationStart))
+        .subscribe(event => {
+          const nav = event as NavigationStart;
+          const rutasProtegidas = ['/mapa', '/juego'];
+          const user = sessionStorage.getItem('usuario');
+
+          if (!user && rutasProtegidas.some(ruta => nav.url.includes(ruta))) {
+            this.router.navigate(['/'], { replaceUrl: true });
+          }
+        });
     }
-
-    const usuarioGuardado = sessionStorage.getItem('usuario');
-    if (usuarioGuardado) {
-      this.usuarioLogueado = JSON.parse(usuarioGuardado);
-      this.isLoggedIn = true;
-    }
-
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationStart))
-      .subscribe(event => {
-        const nav = event as NavigationStart;
-        const rutasProtegidas = ['/mapa', '/juego'];
-        const user = sessionStorage.getItem('usuario');
-
-        if (!user && rutasProtegidas.some(ruta => nav.url.includes(ruta))) {
-          this.router.navigate(['/'], { replaceUrl: true });
-        }
-      });
   }
 
   toggleMenu() {
@@ -148,25 +146,19 @@ export class AppComponent implements OnInit {
   registrar() {
     const fechaRegistro = new Date().toLocaleString('sv-SE').replace('T', ' ');
 
-    if (!isPlatformBrowser(this.platformId)) {
-      this.mensajeError = '⚠️ Esta función solo está disponible en navegador.';
-      return;
-    }
-
     navigator.geolocation.getCurrentPosition(pos => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
+
       const apiKey = 'AIzaSyCLGmLQC1KninQE0_PrfE1EdeGb9M7targ';
       const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
       fetch(url)
         .then(res => res.json())
         .then(data => {
-          if (data.status === 'OK' && data.results.length > 0) {
-            this.registroUbicacion = data.results[0].formatted_address;
-          } else {
-            this.registroUbicacion = `Lat: ${lat}, Lng: ${lng}`;
-          }
+          this.registroUbicacion = (data.status === 'OK' && data.results.length > 0)
+            ? data.results[0].formatted_address
+            : `Lat: ${lat}, Lng: ${lng}`;
 
           const nuevoUsuario = {
             nombre: this.registroNombre,
@@ -196,7 +188,7 @@ export class AppComponent implements OnInit {
           console.error('Error al obtener dirección:', err);
           this.mensajeError = '❌ No se pudo obtener la dirección';
         });
-    }, error => {
+    }, () => {
       this.mensajeError = '⚠️ Necesitamos tu ubicación para continuar.';
     });
   }
