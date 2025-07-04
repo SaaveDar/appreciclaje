@@ -640,7 +640,8 @@ export class MapaComponent implements OnInit, OnDestroy {
             this.activeDirectionsRenderers = this.activeDirectionsRenderers.filter(r => r !== singleRouteRenderer);
             if (marker) {
               marker.setIcon({
-                url: 'https://i.imgur.com/MnD1b69.png',
+                //url: 'https://i.imgur.com/MnD1b69.png',
+                url: `${window.location.origin}/appreciclaje/assets/images/reciclaje-bg.jpg`,
                 scaledSize: new google.maps.Size(40, 40),
               });
             }
@@ -674,7 +675,8 @@ export class MapaComponent implements OnInit, OnDestroy {
   private resetMarkerIcons(): void {
     this.placedMarkers.forEach((marker: google.maps.Marker, key: string) => {
       marker.setIcon({
-        url: 'https://i.imgur.com/MnD1b69.png',
+        //url: 'https://i.imgur.com/MnD1b69.png',
+        url: `${window.location.origin}/appreciclaje/assets/images/reciclaje-bg.jpg`,
         scaledSize: new google.maps.Size(40, 40)
       });
     });
@@ -742,7 +744,8 @@ export class MapaComponent implements OnInit, OnDestroy {
         map: this.map,
         title: poi.markerTitle,
         icon: {
-          url: 'https://i.imgur.com/MnD1b69.png',
+          //url: 'https://i.imgur.com/MnD1b69.png',
+          url: `${window.location.origin}/appreciclaje/assets/images/reciclaje-bg.jpg`,
           scaledSize: new google.maps.Size(40, 40)
         }
       });
