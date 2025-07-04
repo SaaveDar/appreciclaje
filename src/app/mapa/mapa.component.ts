@@ -641,7 +641,7 @@ export class MapaComponent implements OnInit, OnDestroy {
             if (marker) {
               marker.setIcon({
                 //url: 'https://i.imgur.com/MnD1b69.png',
-                url: `${window.location.origin}/appreciclaje/assets/images/reciclaje-bg.jpg`,
+                url: 'assets/images/plastico_icon.png',
                 scaledSize: new google.maps.Size(40, 40),
               });
             }
@@ -676,7 +676,7 @@ export class MapaComponent implements OnInit, OnDestroy {
     this.placedMarkers.forEach((marker: google.maps.Marker, key: string) => {
       marker.setIcon({
         //url: 'https://i.imgur.com/MnD1b69.png',
-        url: `${window.location.origin}/appreciclaje/assets/images/reciclaje-bg.jpg`,
+        url: 'assets/images/plastico_icon.png',
         scaledSize: new google.maps.Size(40, 40)
       });
     });
@@ -745,7 +745,7 @@ export class MapaComponent implements OnInit, OnDestroy {
         title: poi.markerTitle,
         icon: {
           //url: 'https://i.imgur.com/MnD1b69.png',
-          url: `${window.location.origin}/appreciclaje/assets/images/reciclaje-bg.jpg`,
+          url: 'assets/images/plastico_icon.png',
           scaledSize: new google.maps.Size(40, 40)
         }
       });
