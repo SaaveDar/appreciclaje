@@ -1,4 +1,3 @@
-// src/app/servicios/auth.service.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -11,16 +10,15 @@ export class AuthService {
   private isBrowser: boolean;
   usuario$ = new BehaviorSubject<any>(null);
 
-  // ✅ URL base correcta para tu API PHP
-  private readonly API_URL = 'https://comunidadvapps.com/api.php';
+  private readonly NODE_API_URL = 'https://comunidadvapps.com/api.php';
 
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
-
-    // Recuperar usuario guardado
+    
+    // ✅ Solo acceder a sessionStorage si es navegador
     if (this.isBrowser) {
       const usuarioGuardado = sessionStorage.getItem('usuario');
       if (usuarioGuardado) {
@@ -29,17 +27,14 @@ export class AuthService {
     }
   }
 
-  // ✅ Registro apunta a tu api.php con consulta=registrar
   registrarUsuario(data: any): Observable<any> {
-    return this.http.post(`${this.API_URL}?consulta=registrar`, data);
+    return this.http.post(`${this.NODE_API_URL}?consulta=registrar`, data);
   }
 
-  // ✅ Login apunta a tu api.php con consulta=login
   loginUsuario(data: any): Observable<any> {
-    return this.http.post(`${this.API_URL}?consulta=login`, data);
+    return this.http.post(`${this.NODE_API_URL}?consulta=login`, data);
   }
 
-  // ✅ Métodos locales (sin cambios)
   guardarToken(token: string) {
     if (this.isBrowser) {
       sessionStorage.setItem('token', token);
