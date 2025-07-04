@@ -1,17 +1,18 @@
+// src/app/servicios/auth.service.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs'; // Importar Observable
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private isBrowser: boolean;
-  usuario$ = new BehaviorSubject<any>(null); // ⬅️ Observable para el usuario
+  usuario$ = new BehaviorSubject<any>(null);
 
-  // URL base de tu servidor Node.js
-  private readonly NODE_API_URL = 'http://localhost:3000/api'; // Ajusta esto para producción (ej. https://tudominio.com/api)
+  // ✅ URL base correcta para tu API PHP
+  private readonly API_URL = 'https://comunidadvapps.com/api.php';
 
   constructor(
     private http: HttpClient,
@@ -19,7 +20,7 @@ export class AuthService {
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
 
-    // Solo si es navegador, recuperar usuario
+    // Recuperar usuario guardado
     if (this.isBrowser) {
       const usuarioGuardado = sessionStorage.getItem('usuario');
       if (usuarioGuardado) {
@@ -28,17 +29,17 @@ export class AuthService {
     }
   }
 
+  // ✅ Registro apunta a tu api.php con consulta=registrar
   registrarUsuario(data: any): Observable<any> {
-    // ✅ Ahora apunta al endpoint de Node.js
-    return this.http.post(`${this.NODE_API_URL}/registrar`, data);
+    return this.http.post(`${this.API_URL}?consulta=registrar`, data);
   }
 
+  // ✅ Login apunta a tu api.php con consulta=login
   loginUsuario(data: any): Observable<any> {
-    // ✅ Ahora apunta al endpoint de Node.js
-    return this.http.post(`${this.NODE_API_URL}/login`, data);
+    return this.http.post(`${this.API_URL}?consulta=login`, data);
   }
 
-  // Puedes añadir un método para guardar el token si lo necesitas para rutas protegidas
+  // ✅ Métodos locales (sin cambios)
   guardarToken(token: string) {
     if (this.isBrowser) {
       sessionStorage.setItem('token', token);
@@ -46,10 +47,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    if (this.isBrowser) {
-      return sessionStorage.getItem('token');
-    }
-    return null;
+    return this.isBrowser ? sessionStorage.getItem('token') : null;
   }
 
   actualizarUsuario(usuario: any) {
@@ -62,7 +60,7 @@ export class AuthService {
   limpiarUsuario() {
     if (this.isBrowser) {
       sessionStorage.removeItem('usuario');
-      sessionStorage.removeItem('token'); // Asegurarse de limpiar el token también
+      sessionStorage.removeItem('token');
       this.usuario$.next(null);
     }
   }
