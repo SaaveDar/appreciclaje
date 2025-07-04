@@ -9,13 +9,15 @@ import { PerfilComponent } from './perfil/perfil.component';
 // import { CategoriasComponent } from './categorias/categorias.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'inicio', pathMatch: 'full' },
-  { path: 'inicio', component: InicioComponent },
+  //{ path: '', redirectTo: 'inicio', pathMatch: 'full' },
+  { path: '', component: InicioComponent },
+  //{ path: 'inicio', component: InicioComponent },
   {
     path: 'categorias',
     loadComponent: () =>
       import('./categorias/categorias.component').then(m => m.CategoriasComponent)
   },
+  { path: 'inicio', component: InicioComponent },
   { path: 'mapa', component: MapaComponent },
   { path: 'juego', component: JuegoComponent },
   { path: 'noticias', component: NoticiasComponent },
