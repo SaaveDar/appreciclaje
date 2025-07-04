@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
@@ -16,16 +16,25 @@ export class PerfilComponent implements OnInit {
   medallas: string = '';
   cursosDisponibles: string[] = [];
 
-  constructor(private http: HttpClient) {}
+  private isBrowser: boolean;
+
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
+    if (!this.isBrowser) return; // ✅ Evita ejecutar en SSR
+
     const usuario = sessionStorage.getItem('usuario');
     if (!usuario) return;
 
     const userData = JSON.parse(usuario);
     this.nombreUsuario = userData.nombre || userData.correo;
 
-    this.http.get<any>(`http://localhost:3000/api/juego/progreso/${userData.id}`).subscribe({
+    this.http.get<any>(`https://comunidadvapps.com/api.php/consulta=progreso&id=${userData.id}`).subscribe({
       next: (data) => {
         this.puntaje = data.puntaje;
         this.nivel = data.nivel;
