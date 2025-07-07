@@ -57,8 +57,8 @@ export class PerfilComponent implements OnInit {
 
   private isBrowser: boolean;
 
-  //private apiUrl = 'https://comunidadvapps.com/api.php'; // si usas el backend PHP
-  private apiUrl = 'http://localhost:3000/api'; // si usas un backend Node.js (server.js)
+  private apiUrl = 'https://comunidadvapps.com/api.php'; // si usas el backend PHP
+  //private apiUrl = 'http://localhost:3000/api'; // si usas un backend Node.js (server.js)
 
   constructor(
     private http: HttpClient,
@@ -96,8 +96,8 @@ export class PerfilComponent implements OnInit {
     this.tipoUsuario = userData.tipo_usuario || 'estandar';
 
     // 🔍 Obtener perfil
-    //this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userId}`).subscribe({
-    this.http.get<any>(`${this.apiUrl}/perfil/${userId}`).subscribe({
+    this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userId}`).subscribe({
+    //this.http.get<any>(`${this.apiUrl}/perfil/${userId}`).subscribe({
       next: perfil => {
         this.nombreUsuario = perfil.nombre ?? '';
         this.apellidoUsuario = perfil.apellido ?? '';
@@ -166,8 +166,8 @@ export class PerfilComponent implements OnInit {
   }
 
   verUsuarios() {
-    //this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userId}`).subscribe({
-    this.http.get<any[]>(`${this.apiUrl}/usuarios`).subscribe({
+    this.http.get<any[]>(`${this.apiUrl}?accion=listar-usuarios`).subscribe({
+    //this.http.get<any[]>(`${this.apiUrl}/usuarios`).subscribe({
       next: datos => {
         this.usuarios = datos;
         this.filtrarUsuarios();
@@ -190,8 +190,8 @@ export class PerfilComponent implements OnInit {
 
     // ➕ Listar cursos
   listarCursos() {
-  //this.http.get<any[]>(`${this.apiUrl}?accion=listar-cursos`).subscribe({
-  this.http.get<any[]>(`${this.apiUrl}/cursos`).subscribe({
+  this.http.get<any[]>(`${this.apiUrl}?accion=listar-cursos`).subscribe({
+  //this.http.get<any[]>(`${this.apiUrl}/cursos`).subscribe({
     next: datos => {
       this.cursos = datos;
       this.filtrarCursos();
@@ -215,7 +215,8 @@ export class PerfilComponent implements OnInit {
       next: () => {
         alert('✅ Curso registrado con éxito');
         this.listarCursos();
-        this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: 0, modalidad: '', extra: '', estado: 'activo' };
+        //this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: 0, modalidad: '', extra: '', estado: 'activo' };
+        this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: null, modalidad: '', extra: '', estado: 'activo' };
       },
       error: err => console.error('❌ Error al registrar curso:', err)
     });
