@@ -28,13 +28,13 @@ export class AuthService {
   }
 
   registrarUsuario(data: any): Observable<any> {
-    //return this.http.post(`${this.NODE_API_URL}?consulta=registrar`, data);
-    return this.http.post('http://localhost:3000/api/registrar', data);
+    return this.http.post(`${this.NODE_API_URL}?consulta=registrar`, data);
+    //return this.http.post('http://localhost:3000/api/registrar', data);
   }
 
   loginUsuario(data: any): Observable<any> {
-    //return this.http.post(`${this.NODE_API_URL}?consulta=login`, data);
-    return this.http.post('http://localhost:3000/api/login', data);
+    return this.http.post(`${this.NODE_API_URL}?consulta=login`, data);
+    //return this.http.post('http://localhost:3000/api/login', data);
   }
 
   guardarToken(token: string) {
