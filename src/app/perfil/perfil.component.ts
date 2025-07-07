@@ -10,22 +10,22 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrls: ['./perfil.component.css']
 })
 export class PerfilComponent implements OnInit {
-  nombreUsuario: string = '';
-  apellidoUsuario: string = '';
-  correoUsuario: string = '';
-  edad: string = '';
-  tipoDocumento: string = '';
-  documento: string = '';
-  fechaRegistro: string = '';
-  tipoUsuario: string = '';
+  nombreUsuario = '';
+  apellidoUsuario = '';
+  correoUsuario = '';
+  edad = '';
+  tipoDocumento = '';
+  documento = '';
+  fechaRegistro = '';
+  tipoUsuario = '';
 
-  puntaje: number = 0;
-  nivel: number = 1;
-  medallas: string = '';
+  puntaje = 0;
+  nivel = 1;
+  medallas = '';
   cursosDisponibles: string[] = [];
 
   private isBrowser: boolean;
-  private apiUrl: string = 'https://comunidadvapps.com/api.php';
+  private apiUrl = 'https://comunidadvapps.com/api.php';
 
   constructor(
     private http: HttpClient,
@@ -38,36 +38,29 @@ export class PerfilComponent implements OnInit {
     if (!this.isBrowser) return;
 
     const usuario = sessionStorage.getItem('usuario');
-    if (!usuario) {
-      console.error('⚠️ No hay usuario en sessionStorage');
-      return;
-    }
+    if (!usuario) return;
 
     const userData = JSON.parse(usuario);
+    const userId = userData.id;
 
-    this.obtenerPerfil(userData.id);
-    this.obtenerProgreso(userData.id);
-  }
-
-  private obtenerPerfil(userId: number) {
+    // 🔍 Obtener perfil
     this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userId}`).subscribe({
       next: perfil => {
-        this.nombreUsuario = perfil.nombre || '';
-        this.apellidoUsuario = perfil.apellido || '';
-        this.correoUsuario = perfil.correo || '';
-        this.tipoDocumento = perfil.tipo_documento || '';
-        this.documento = perfil.documento || '';
-        this.fechaRegistro = perfil.fecha_registro || '';
-        this.tipoUsuario = perfil.tipo_usuario || 'estandar';
+        this.nombreUsuario = perfil.nombre ?? '';
+        this.apellidoUsuario = perfil.apellido ?? '';
+        this.correoUsuario = perfil.correo ?? '';
+        this.tipoDocumento = perfil.tipo_documento ?? '';
+        this.documento = perfil.documento ?? '';
+        this.fechaRegistro = perfil.fecha_registro ?? '';
+        this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
         this.edad = this.calcularEdad(perfil.fecha_nacimiento);
       },
       error: err => {
         console.error('❌ Error al cargar perfil:', err);
       }
     });
-  }
 
-  private obtenerProgreso(userId: number) {
+    // 🎮 Obtener progreso
     this.http.get<any>(`${this.apiUrl}?accion=progreso&id=${userId}`).subscribe({
       next: progreso => {
         this.puntaje = progreso.puntaje ?? 0;
@@ -76,16 +69,14 @@ export class PerfilComponent implements OnInit {
         this.cargarCursos();
       },
       error: () => {
-        console.warn('⚠️ No se pudo cargar el progreso, asignando valores por defecto');
         this.puntaje = 0;
         this.nivel = 1;
         this.medallas = '';
-        this.cargarCursos(); // Mostrar cursos por puntaje cero
       }
     });
   }
 
-  private calcularEdad(fechaNacimiento: string): string {
+  calcularEdad(fechaNacimiento: string): string {
     if (!fechaNacimiento) return '';
 
     const nacimiento = new Date(fechaNacimiento);
