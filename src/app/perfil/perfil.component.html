@@ -1,5 +1,15 @@
 <div class="perfil-contenedor">
-  <h2>👤 Bienvenido, {{ nombreUsuario }}</h2>
+  <h2>👤 Bienvenido, {{ nombreUsuario }} {{ apellidoUsuario }}</h2>
+
+  <div class="datos-personales">
+    <p>🎂 Edad: <strong>{{ edad }}</strong> </p>
+    <p>🪪 Tipo de documento: <strong>{{ tipoDocumento }}</strong></p>
+    <p>🔢 Documento: <strong>{{ documento }}</strong></p>
+    <p>📅 Fecha de registro: <strong>{{ fechaRegistro }}</strong></p>
+    <p>🔑 Tipo de usuario: <strong>{{ tipoUsuario }}</strong></p>
+    <p>📧 Correo: <strong>{{ correoUsuario }}</strong></p>
+
+  </div>
 
   <div class="stats">
     <p>🏆 Puntaje total: <strong>{{ puntaje }}</strong></p>

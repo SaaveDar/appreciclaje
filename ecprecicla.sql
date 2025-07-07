@@ -6,13 +6,24 @@ USE reciclaje_inteligente;
 -- Tabla: usuarios
 CREATE TABLE usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  nombre VARCHAR(100),
-  correo VARCHAR(100) UNIQUE,
-  contrasena VARCHAR(255),
+  nombre VARCHAR(100) NOT NULL,
+  apellido VARCHAR(100) NOT NULL,
+  tipo_documento VARCHAR(20) NOT NULL,
+  documento VARCHAR(15) NOT NULL,
+  fecha_nacimiento date not NULL,
+  correo VARCHAR(100) NOT NULL UNIQUE,
+  contrasena VARCHAR(255) NOT NULL,
   ubicacion_actual VARCHAR(255),
+  tipo_usuario ENUM('administrador', 'docente', 'estandar') DEFAULT 'estandar',
   fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+/*
+ALTER TABLE usuarios
+ADD COLUMN fecha_nacimiento DATE NOT NULL DEFAULT '2000-01-01'
+AFTER documento;
+
+¨*/
 
 -- progreso_juego
 

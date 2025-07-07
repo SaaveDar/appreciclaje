@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-perfil',
@@ -11,13 +11,22 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 })
 export class PerfilComponent implements OnInit {
   nombreUsuario: string = '';
+  apellidoUsuario: string = '';
+  correoUsuario: string = '';
+  edad: string = '';
+  tipoDocumento: string = '';
+  documento: string = '';
+  fechaRegistro: string = '';
+  tipoUsuario: string = '';
+
   puntaje: number = 0;
   nivel: number = 1;
   medallas: string = '';
   cursosDisponibles: string[] = [];
 
   private isBrowser: boolean;
-
+  //private apiUrl: string = 'http://localhost:3000'; // Cambia a tu dominio real cuando publiques
+  private apiUrl: string = 'https://comunidadvapps.com/api.php';
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -26,27 +35,76 @@ export class PerfilComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (!this.isBrowser) return; // ✅ Evita ejecutar en SSR
+    if (!this.isBrowser) return;
 
     const usuario = sessionStorage.getItem('usuario');
-    if (!usuario) return;
+    const token = sessionStorage.getItem('token');
+
+    if (!usuario || !token) return;
 
     const userData = JSON.parse(usuario);
-    this.nombreUsuario = userData.nombre || userData.correo;
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.http.get<any>(`https://comunidadvapps.com/api.php/consulta=progreso&id=${userData.id}`).subscribe({
-      next: (data) => {
-        this.puntaje = data.puntaje;
-        this.nivel = data.nivel;
-        this.medallas = data.medallas;
+    this.obtenerPerfil(userData.id, headers);
+    this.obtenerProgreso(userData.id, headers);
+  }
+
+  private obtenerPerfil(userId: number, headers: HttpHeaders) {
+    this.http.get<any>(`${this.apiUrl}/api/perfil/${userId}`, { headers }).subscribe({
+      next: perfil => {
+        this.nombreUsuario = perfil.nombre ?? '';
+        this.apellidoUsuario = perfil.apellido ?? '';
+        this.correoUsuario = perfil.correo ?? '';
+        this.tipoDocumento = perfil.tipo_documento ?? '';
+        this.documento = perfil.documento ?? '';
+        this.fechaRegistro = perfil.fecha_registro ?? '';
+        this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
+        this.edad = this.calcularEdad(perfil.fecha_nacimiento);
+      },
+      error: err => {
+        console.error('❌ Error al cargar perfil:', err);
+      }
+    });
+  }
+
+  private obtenerProgreso(userId: number, headers: HttpHeaders) {
+    this.http.get<any>(`${this.apiUrl}/api/progreso/${userId}`, { headers }).subscribe({
+      next: progreso => {
+        this.puntaje = progreso.puntaje ?? 0;
+        this.nivel = progreso.nivel ?? 1;
+        this.medallas = progreso.medallas ?? '';
         this.cargarCursos();
       },
       error: () => {
+        console.warn('⚠️ No se pudo cargar el progreso, asignando valores por defecto');
         this.puntaje = 0;
         this.nivel = 1;
         this.medallas = '';
       }
     });
+  }
+
+  calcularEdad(fechaNacimiento: string): string {
+    if (!fechaNacimiento) return '';
+
+    const nacimiento = new Date(fechaNacimiento);
+    const hoy = new Date();
+
+    let años = hoy.getFullYear() - nacimiento.getFullYear();
+    let meses = hoy.getMonth() - nacimiento.getMonth();
+    let dias = hoy.getDate() - nacimiento.getDate();
+
+    if (dias < 0) {
+      meses--;
+      dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();
+    }
+
+    if (meses < 0) {
+      años--;
+      meses += 12;
+    }
+
+    return `${años} años, ${meses} meses, ${dias} días`;
   }
 
   cargarCursos() {

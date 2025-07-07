@@ -1,0 +1,11 @@
+{
+  "routes": {
+    "/appreciclaje": {},
+    "/appreciclaje/categorias": {},
+    "/appreciclaje/inicio": {},
+    "/appreciclaje/juego": {},
+    "/appreciclaje/mapa": {},
+    "/appreciclaje/noticias": {},
+    "/appreciclaje/perfil": {}
+  }
+}

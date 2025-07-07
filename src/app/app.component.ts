@@ -35,6 +35,14 @@ export class AppComponent implements OnInit {
   usuarioLogueado: any = null;
   menuVisibleSidebar = false;
 
+  registroTipoDoc: string = 'DNI';
+  registroDocumento: string = '';
+  registroApellidos: string = '';
+  registroFechaNacimiento: string = '';
+  mensajeErrorDocumento: string = '';
+  documentoInvalido: boolean = false;
+  errorEdad: string = '';
+
   constructor(
     private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -61,6 +69,55 @@ export class AppComponent implements OnInit {
           }
         });
     }
+  }
+
+  soloNumeros(event: KeyboardEvent) {
+  const charCode = event.which ? event.which : event.keyCode;
+  // Solo permitir números (0-9)
+  if (charCode < 48 || charCode > 57) {
+    event.preventDefault();
+  }
+}
+
+
+  validarDocumento() {
+  if (this.registroTipoDoc === 'DNI') {
+    this.documentoInvalido = this.registroDocumento.length !== 8;
+    this.mensajeErrorDocumento = 'El DNI debe tener exactamente 8 dígitos.';
+  } else if (this.registroTipoDoc === 'CE') {
+    this.documentoInvalido = this.registroDocumento.length < 9 || this.registroDocumento.length > 12;
+    this.mensajeErrorDocumento = 'El CE debe tener entre 9 y 12 dígitos.';
+  }
+}
+
+
+  validarEdad() {
+  if (!this.registroFechaNacimiento) {
+    this.errorEdad = '';
+    return;
+  }
+
+  const fechaNac = new Date(this.registroFechaNacimiento);
+  const hoy = new Date();
+
+  let edad = hoy.getFullYear() - fechaNac.getFullYear();
+  const mesDiferencia = hoy.getMonth() - fechaNac.getMonth();
+  const diaDiferencia = hoy.getDate() - fechaNac.getDate();
+
+  if (mesDiferencia < 0 || (mesDiferencia === 0 && diaDiferencia < 0)) {
+    edad--; // No ha cumplido aún este año
+  }
+
+  if (edad < 16) {
+    this.errorEdad = 'Debes cumplir con las politicas de nuestro servicio web: Tener más de 16 años';
+  } else {
+    this.errorEdad = '';
+  }
+}
+
+  limpiarDocumento() {
+    this.registroDocumento = '';
+    this.validarDocumento();
   }
 
   toggleMenu() {
@@ -121,6 +178,7 @@ export class AppComponent implements OnInit {
     });
   }
 
+  
   cerrarSesion() {
     this.usuarioLogueado = null;
     this.authService.limpiarUsuario();
@@ -144,54 +202,64 @@ export class AppComponent implements OnInit {
   }
 
   registrar() {
-    const fechaRegistro = new Date().toLocaleString('sv-SE').replace('T', ' ');
+  const fechaRegistro = new Date().toLocaleString('sv-SE').replace('T', ' ');
 
-    navigator.geolocation.getCurrentPosition(pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
 
-      const apiKey = 'AIzaSyCLGmLQC1KninQE0_PrfE1EdeGb9M7targ';
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+    const apiKey = 'AIzaSyCLGmLQC1KninQE0_PrfE1EdeGb9M7targ';
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          this.registroUbicacion = (data.status === 'OK' && data.results.length > 0)
-            ? data.results[0].formatted_address
-            : `Lat: ${lat}, Lng: ${lng}`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        this.registroUbicacion = (data.status === 'OK' && data.results.length > 0)
+          ? data.results[0].formatted_address
+          : `Lat: ${lat}, Lng: ${lng}`;
 
-          const nuevoUsuario = {
-            nombre: this.registroNombre,
-            correo: this.registroCorreo,
-            contrasena: this.registroClave,
-            ubicacion_actual: this.registroUbicacion,
-            fecha_registro: fechaRegistro
-          };
+        // ✅ ENVIAR TODOS LOS CAMPOS EXACTAMENTE COMO EL BACKEND ESPERA
+        const nuevoUsuario = {
+          nombre: this.registroNombre,
+          apellido: this.registroApellidos,
+          tipo_documento: this.registroTipoDoc,
+          documento: this.registroDocumento,
+          fecha_nacimiento: this.registroFechaNacimiento, // Snake case
+          correo: this.registroCorreo,
+          contrasena: this.registroClave,
+          ubicacion_actual: this.registroUbicacion,
+          fecha_registro: fechaRegistro
+        };
 
-          this.authService.registrarUsuario(nuevoUsuario).subscribe({
-            next: () => {
-              this.registroExitoso = true;
-              this.mensajeError = '';
-              setTimeout(() => {
-                this.registroExitoso = false;
-                this.cerrarModal();
-                this.modo = 'login';
-              }, 3000);
-            },
-            error: (err) => {
-              console.error('❌ Error al registrar:', err);
-              this.mensajeError = err?.error?.mensaje || '❌ Error al registrar';
-            }
-          });
-        })
-        .catch(err => {
-          console.error('Error al obtener dirección:', err);
-          this.mensajeError = '❌ No se pudo obtener la dirección';
+        console.log('📤 Enviando:', nuevoUsuario);
+
+        this.authService.registrarUsuario(nuevoUsuario).subscribe({
+          next: () => {
+            this.registroExitoso = true;
+            this.mensajeError = '';
+            this.limpiarFormulario(); // ✅ Aquí limpias todo
+            setTimeout(() => {
+              this.registroExitoso = false;
+              this.cerrarModal();
+              this.modo = 'login';
+            }, 3000);
+          },
+          error: (err) => {
+            console.error('❌ Error al registrar:', err);
+            this.mensajeError = err?.error?.mensaje || '❌ Error al registrar';
+          }
         });
-    }, () => {
-      this.mensajeError = '⚠️ Necesitamos tu ubicación para continuar.';
-    });
-  }
+      })
+      .catch(err => {
+        console.error('Error al obtener dirección:', err);
+        this.mensajeError = '❌ No se pudo obtener la dirección';
+      });
+  }, () => {
+    this.mensajeError = '⚠️ Necesitamos tu ubicación para continuar.';
+  });
+}
+
+
 
   cambiarAModoRegistro() {
     this.modo = 'registro';
@@ -202,4 +270,20 @@ export class AppComponent implements OnInit {
     this.modo = 'login';
     this.mensajeError = '';
   }
+
+  limpiarFormulario() {
+  this.registroNombre = '';
+  this.registroApellidos = '';
+  this.registroTipoDoc = 'DNI'; // O el valor por defecto que quieras
+  this.registroDocumento = '';
+  this.registroFechaNacimiento = '';
+  this.registroCorreo = '';
+  this.registroClave = '';
+  this.registroUbicacion = '';
+  this.documentoInvalido = false;
+  this.mensajeErrorDocumento = '';
+  this.errorEdad = '';
 }
+
+}
+

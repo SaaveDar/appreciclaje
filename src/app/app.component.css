@@ -517,3 +517,147 @@
   background-color: white;
   color: #c62828;
 }
+
+/* pra  dni y fecha de nacimiento*/
+/* Diseño Profesional para formulario de registro */
+
+/* Estilo para el Select del Tipo de Documento */
+select#tipoDocumento {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+select#tipoDocumento:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  outline: none;
+}
+
+/* Estilo para el Input de Fecha de Nacimiento */
+input[type="date"]#fechaNacimiento {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="date"]#fechaNacimiento:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  outline: none;
+}
+
+/* Estilo adicional para mensajes de error */
+.error-mensaje {
+  color: #d32f2f;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  select#tipoDocumento, 
+  input[type="date"]#fechaNacimiento {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Diseño Profesional para formulario de registro */
+
+/* Contenedor para colocar el select y el input en una sola línea */
+.documento-linea {
+  display: flex;
+  gap: 0.6rem; /* Reduce espacio horizontal */
+  align-items: center;
+  margin-bottom: 1rem; /* Reduce espacio vertical */
+}
+
+/* Estilo para el Select del Tipo de Documento */
+select#tipoDocumento {
+  flex: 1;
+  padding: 0.5rem 0.8rem; /* Reduce padding vertical */
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+select#tipoDocumento:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  outline: none;
+}
+
+/* Estilo para el Input del Documento */
+input#documento {
+  flex: 2;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+select#tipoDocumento:focus,
+input#documento:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  outline: none;
+}
+
+/* Estilo para el Input de Fecha de Nacimiento */
+input[type="date"]#fechaNacimiento {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="date"]#fechaNacimiento:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  outline: none;
+}
+
+/* Estilo adicional para mensajes de error */
+/* Mensaje de error */
+.error-mensaje {
+  color: #d32f2f;
+  font-size: 0.9rem;
+  margin-top: -1.7rem;
+}
+/* Responsive */
+@media (max-width: 600px) {
+  .documento-linea {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  select#tipoDocumento, 
+  input#documento, 
+  input[type="date"]#fechaNacimiento {
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    font-size: 0.95rem;
+  }
+}
+

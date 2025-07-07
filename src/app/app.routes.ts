@@ -18,9 +18,16 @@ export const routes: Routes = [
       import('./categorias/categorias.component').then(m => m.CategoriasComponent)
   },
   { path: 'inicio', component: InicioComponent },
+  {
+    path: 'nosotros',
+    loadComponent: () =>
+      import('./nosotros/nosotros.component').then(m => m.NosotrosComponent)
+  },
+
   { path: 'mapa', component: MapaComponent },
   { path: 'juego', component: JuegoComponent },
   { path: 'noticias', component: NoticiasComponent },
   { path: 'perfil', component: PerfilComponent },
-  { path: '**', redirectTo: 'inicio' }
+  //{ path: '**', redirectTo: 'inicio' }
+  { path: '**', redirectTo: '', pathMatch: 'full' } // 
 ];

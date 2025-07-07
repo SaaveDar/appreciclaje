@@ -1,54 +1,63 @@
 .perfil-contenedor {
-  max-width: 600px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #f4f8f5;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 720px;
+  margin: 3rem auto;
+  padding: 3rem;
+  background-color: #f8fbf9;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #2e3d2f;
+  color: #212121;
+  transition: all 0.3s ease;
 }
 
 .perfil-contenedor h2 {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
+  font-size: 2.2rem;
+  margin-bottom: 1.8rem;
   text-align: center;
-  color: #2e7d32;
+  color: #1b5e20;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .stats {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-  margin-bottom: 2rem;
-  padding: 1rem;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  padding: 1.6rem;
   background-color: #ffffff;
   border: 1px solid #c8e6c9;
-  border-radius: 12px;
+  border-radius: 18px;
 }
 
 .stats p {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   display: flex;
   justify-content: space-between;
+  font-weight: 500;
+  color: #424242;
 }
 
 .stats strong {
-  color: #1b5e20;
+  color: #2e7d32;
+  font-weight: 600;
 }
 
 .cursos-canje {
   background-color: #e8f5e9;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #c5e1a5;
+  padding: 2.2rem;
+  border-radius: 18px;
+  border: 1px solid #aed581;
+  transition: background-color 0.3s;
 }
 
 .cursos-canje h3 {
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
+  font-size: 1.7rem;
+  margin-bottom: 1.4rem;
   color: #388e3c;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .cursos-canje ul {
@@ -59,41 +68,45 @@
 
 .cursos-canje li {
   background-color: #ffffff;
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.6rem;
-  border-radius: 8px;
-  border-left: 5px solid #66bb6a;
-  font-size: 1.05rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 1rem 1.4rem;
+  margin-bottom: 0.8rem;
+  border-radius: 12px;
+  border-left: 6px solid #66bb6a;
+  font-size: 1.15rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cursos-canje li:hover {
+  background-color: #f1f8e9;
 }
 
 .cursos-canje p {
   margin: 0;
   font-style: italic;
-  color: #777;
+  color: #555;
   text-align: center;
 }
 
 /* Responsive para móviles */
 @media (max-width: 600px) {
   .perfil-contenedor {
-    padding: 1.5rem 1rem;
-    margin: 1rem;
+    padding: 2rem 1rem;
+    margin: 1.5rem;
   }
 
   .perfil-contenedor h2 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
 
   .stats p {
-    font-size: 1rem;
+    font-size: 1.05rem;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.3rem;
+    gap: 0.4rem;
   }
 
   .cursos-canje h3 {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
   }
 
   .cursos-canje li {

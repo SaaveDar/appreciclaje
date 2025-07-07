@@ -14,7 +14,7 @@ connection.connect((err) => {
     console.error('❌ Error de conexión a MySQL:', err.stack);
     return;
   }
-  console.log('✅ Conectado a la base de datos MySQL con ID', connection.threadId);
+  console.log('✅ Conectado a la base de datos MySQL local con ID', connection.threadId);
 });
 
 module.exports = connection;

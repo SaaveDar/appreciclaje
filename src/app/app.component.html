@@ -5,6 +5,7 @@
 <nav class="topnav">
   <ul class="menu-centro">
     <li><a routerLink="/">INICIO</a></li>
+    <li><a routerLink="/nosotros">NOSOTROS</a></li>
     <li><a routerLink="/categorias">CATEGORÍAS</a></li>
     <!-- Los enlaces a MAPA y JUEGO solo se mostrarán si el usuario está logueado -->
     <li *ngIf="usuarioLogueado"><a routerLink="/mapa">MAPA</a></li>
@@ -29,7 +30,8 @@
         <div class="texto-bienvenida" (click)="toggleMenu()" style="cursor: pointer;">
           <!-- Se asume que usuarioLogueado.nombre existe, si no, puedes usar usuarioLogueado.correo -->
           <p class="saludo">¡Bienvenido,</p>
-          <p class="nombre-usuario">{{ usuarioLogueado.nombre || usuarioLogueado.correo }}</p>
+          <p class="nombre-usuario">{{ usuarioLogueado.nombre  }}</p>
+          
         </div>
 
         <!-- Menú desplegable del usuario (Cambiar contraseña, Cerrar sesión) -->
@@ -48,6 +50,7 @@
   <button class="close-btn" (click)="toggleSidebar()">✖</button>
   <ul>
     <li><a routerLink="/" (click)="toggleSidebar()">INICIO</a></li>
+    <li><a routerLink="/nosotros" (click)="toggleSidebar()">NOSOTROS</a></li>
     <li><a routerLink="/categorias" (click)="toggleSidebar()">CATEGORÍAS</a></li>
     <!-- Los enlaces a MAPA y JUEGO en el sidebar solo se mostrarán si el usuario está logueado -->
     <li *ngIf="usuarioLogueado"><a routerLink="/mapa" (click)="toggleSidebar()">MAPA</a></li>
@@ -121,20 +124,60 @@
 
     <!-- Formulario de Registro -->
     <form *ngIf="modo === 'registro'" (ngSubmit)="registrar()" class="formulario-login" autocomplete="off">
-      <label for="nombre">Nombre completo</label>
+      <label for="nombre">Nombres</label>
       <input type="text" id="nombre" [(ngModel)]="registroNombre" name="nombre" required />
 
+      <label for="apellidos">Apellidos</label>
+      <input type="text" id="apellido" [(ngModel)]="registroApellidos" name="apellido" required />
+
+      <label for="tipoDocumento">Tipo de documento</label>
+        <div class="documento-linea">
+          <select id="tipoDocumento" [(ngModel)]="registroTipoDoc" name="tipoDocumento" (change)="limpiarDocumento()" required>
+            <option value="DNI">DNI</option>
+            <option value="CE">Carné de Extranjería</option>
+          </select>
+
+          <input
+            type="text"
+            id="documento"
+            [(ngModel)]="registroDocumento"
+            name="documento"
+            required
+            inputmode="numeric"
+            maxlength="12"
+            placeholder="Número de documento"
+            (keypress)="soloNumeros($event)"
+            (input)="validarDocumento()"
+          />
+        </div>
+        <div *ngIf="documentoInvalido" class="error-mensaje">
+            {{ mensajeErrorDocumento }}
+        </div>  
+
+      <label for="fechaNacimiento">Fecha de nacimiento</label>
+      <input
+        type="date"
+        id="fechaNacimiento"
+        [(ngModel)]="registroFechaNacimiento"
+        (change)="validarEdad()"
+        name="fechaNacimiento"
+        required
+        class="input-date"
+      />
+       <small class="error" *ngIf="errorEdad">{{ errorEdad }}</small>
+       
       <label for="correo">Correo electrónico</label>
       <input type="email" id="correo" [(ngModel)]="registroCorreo" name="correo" required />
 
       <label for="clave">Contraseña</label>
       <input type="password" id="clave" [(ngModel)]="registroClave" name="clave" required />
 
-      <!-- El input de ubicación se mantiene como hidden según tu código original -->
       <input type="hidden" id="ubicacion" [(ngModel)]="registroUbicacion" name="ubicacion" required />
 
-      <button type="submit" class="btn-ingresar">Registrar</button>
+      <button type="submit" class="btn-ingresar" [disabled]="documentoInvalido">Registrar</button>
     </form>
+
+
 
     <!-- Botón Google solo en login -->
     <button *ngIf="modo === 'login'" class="google-btn" type="button">
