@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-perfil',
@@ -25,8 +25,8 @@ export class PerfilComponent implements OnInit {
   cursosDisponibles: string[] = [];
 
   private isBrowser: boolean;
-  //private apiUrl: string = 'http://localhost:3000'; // Cambia a tu dominio real cuando publiques
   private apiUrl: string = 'https://comunidadvapps.com/api.php';
+
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -38,19 +38,12 @@ export class PerfilComponent implements OnInit {
     if (!this.isBrowser) return;
 
     const usuario = sessionStorage.getItem('usuario');
-    const token = sessionStorage.getItem('token');
-
-    if (!usuario || !token) return;
+    if (!usuario) return;
 
     const userData = JSON.parse(usuario);
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.obtenerPerfil(userData.id, headers);
-    this.obtenerProgreso(userData.id, headers);
-  }
-
-  private obtenerPerfil(userId: number, headers: HttpHeaders) {
-    this.http.get<any>(`${this.apiUrl}/api/perfil/${userId}`, { headers }).subscribe({
+    // 🔍 Cambiar a ?accion=perfil&id=...
+    this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userData.id}`).subscribe({
       next: perfil => {
         this.nombreUsuario = perfil.nombre ?? '';
         this.apellidoUsuario = perfil.apellido ?? '';
@@ -65,10 +58,13 @@ export class PerfilComponent implements OnInit {
         console.error('❌ Error al cargar perfil:', err);
       }
     });
+
+    // ✔️ Esto aún no lo tienes implementado en PHP, así que fallará si no existe la ruta
+    this.obtenerProgreso(userData.id);
   }
 
-  private obtenerProgreso(userId: number, headers: HttpHeaders) {
-    this.http.get<any>(`${this.apiUrl}/api/progreso/${userId}`, { headers }).subscribe({
+  private obtenerProgreso(userId: number) {
+    this.http.get<any>(`${this.apiUrl}?accion=progreso&id=${userId}`).subscribe({
       next: progreso => {
         this.puntaje = progreso.puntaje ?? 0;
         this.nivel = progreso.nivel ?? 1;
