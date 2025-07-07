@@ -84,6 +84,20 @@ export class PerfilComponent implements OnInit {
     return this.tipoUsuario === 'administrador' || this.tipoUsuario === 'docente';
   }
 
+  // ➕ Modal
+mensajeModal = '';
+mostrarModal = false;
+
+mostrarMensaje(mensaje: string) {
+  this.mensajeModal = mensaje;
+  this.mostrarModal = true;
+}
+
+cerrarModal() {
+  this.mostrarModal = false;
+}
+
+
   ngOnInit(): void {
     
     if (!this.isBrowser) return;
@@ -212,11 +226,13 @@ export class PerfilComponent implements OnInit {
   // ➤ API Node.js
   // this.http.post<any>(`${this.apiUrl}/cursos`, this.nuevoCurso).subscribe({
     next: respuesta => {
-      alert(respuesta.mensaje || '✅ Curso registrado con éxito');
+      //alert(respuesta.mensaje || '✅ Curso registrado con éxito');
+      this.mostrarMensaje(respuesta.mensaje || '✅ Curso registrado con éxito');
       this.listarCursos();
       this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: null, modalidad: '', extra: '', estado: 'activo' };
     },
-    error: err => console.error('❌ Error al registrar curso:', err)
+    //error: err => console.error('❌ Error al registrar curso:', err)
+    error: err => this.mostrarMensaje('❌ Error al registrar curso: ' + (err.error?.error || 'Error desconocido'))
   });
 }
 
@@ -249,12 +265,14 @@ export class PerfilComponent implements OnInit {
 
   canjearCurso(curso: any) {
   if (this.puntaje < 100) {
-    alert('❌ No tienes puntos suficientes para canjear este curso');
+    //alert('❌ No tienes puntos suficientes para canjear este curso');
+    this.mostrarMensaje('❌ No tienes puntos suficientes para canjear este curso');
     return;
   }
 
   // Aquí puedes hacer la lógica para descontar puntos o registrar el canje
-  alert(`🎁 Has canjeado el curso: ${curso.nombre}`);
+  //alert(`🎁 Has canjeado el curso: ${curso.nombre}`);
+  this.mostrarMensaje(`🎁 Has canjeado el curso: ${curso.nombre}`);
 
   // Ejemplo: restar puntos por cada curso
   this.puntaje -= 100;
