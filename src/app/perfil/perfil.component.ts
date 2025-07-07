@@ -205,22 +205,21 @@ export class PerfilComponent implements OnInit {
   });
 }
 
-
-  
-
   // ➕ Registrar nuevo curso
   registrarCurso() {
-      //this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userId}`).subscribe({
-    this.http.post(`${this.apiUrl}/cursos`, this.nuevoCurso).subscribe({
-      next: () => {
-        alert('✅ Curso registrado con éxito');
-        this.listarCursos();
-        //this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: 0, modalidad: '', extra: '', estado: 'activo' };
-        this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: null, modalidad: '', extra: '', estado: 'activo' };
-      },
-      error: err => console.error('❌ Error al registrar curso:', err)
-    });
-  }
+  // ➤ API PHP
+  this.http.post<any>(`${this.apiUrl}?accion=registrar-curso`, this.nuevoCurso).subscribe({
+  // ➤ API Node.js
+  // this.http.post<any>(`${this.apiUrl}/cursos`, this.nuevoCurso).subscribe({
+    next: respuesta => {
+      alert(respuesta.mensaje || '✅ Curso registrado con éxito');
+      this.listarCursos();
+      this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: null, modalidad: '', extra: '', estado: 'activo' };
+    },
+    error: err => console.error('❌ Error al registrar curso:', err)
+  });
+}
+
 
   // ➕ Filtrar cursos
   filtrarCursos() {
