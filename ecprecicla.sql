@@ -27,6 +27,26 @@ AFTER documento;
 
 -- progreso_juego
 
+-- tabla cursos
+CREATE TABLE cursos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  duracion VARCHAR(100),
+  horario VARCHAR(100),
+  precio DECIMAL(10,2),
+  modalidad VARCHAR(100),
+  extra VARCHAR(100),
+  estado ENUM('activo', 'inactivo') DEFAULT 'activo'
+);
+
+-- Registros iniciales
+INSERT INTO cursos (nombre, duracion, horario, precio, modalidad, extra, estado)
+VALUES
+('Curso básico de reciclaje', '4 semanas', 'Lunes 7pm a 9pm', 100.00, 'virtual', 'Certificado', 'activo'),
+('Gestión ambiental', '6 semanas', 'Miércoles 6pm a 9pm', 150.00, 'presencial', 'Incluye prácticas', 'activo');
+
+
+
 CREATE TABLE progreso_juego (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id INT NOT NULL,

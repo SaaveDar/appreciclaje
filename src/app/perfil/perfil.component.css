@@ -113,3 +113,207 @@
     font-size: 1rem;
   }
 }
+
+
+/* perfil.component.css */
+
+.perfil-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tabs {
+  display: flex;
+  justify-content: flex-start;
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  padding: 0.75rem 1.5rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+}
+
+.tab.active {
+  color: #1976d2;
+  border-color: #1976d2;
+}
+
+.contenido {
+  padding: 1rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-responsive {
+  overflow-x: auto;
+}
+
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.tabla-usuarios th,
+.tabla-usuarios td {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.tabla-usuarios th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+/* Filtros */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filtros input[type="text"],
+.filtros select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  min-width: 150px;
+}
+
+.lista-cursos {
+  list-style: none;
+  padding-left: 1rem;
+}
+
+.lista-cursos li {
+  margin-bottom: 0.5rem;
+}
+
+/* 🔍 Ajustes responsive */
+@media (max-width: 600px) {
+  .tabs {
+    flex-direction: column;
+  }
+
+  .tab {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .filtros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtros input[type="text"],
+  .filtros select {
+    width: 100%;
+  }
+
+  .perfil-container {
+    padding: 1rem;
+  }
+
+  .titulo {
+    font-size: 20px;
+  }
+}
+
+/* Estilo general del modal */
+dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fff;
+  margin: auto;
+}
+
+/* Título del modal */
+dialog h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
+  text-align: center;
+  color: #2c3e50;
+}
+
+/* Formulario centrado y columnas alineadas */
+dialog form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inputs y selects */
+dialog form input,
+dialog form select {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+dialog form input:focus,
+dialog form select:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+/* Botones alineados */
+dialog form div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Estilo de botones */
+dialog form button {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* Botón Guardar */
+dialog form button[type="submit"] {
+  background-color: #4CAF50;
+  color: white;
+}
+
+dialog form button[type="submit"]:hover {
+  background-color: #45a049;
+}
+
+/* Botón Cancelar */
+dialog form button[type="button"] {
+  background-color: #e74c3c;
+  color: white;
+}
+
+dialog form button[type="button"]:hover {
+  background-color: #c0392b;
+}

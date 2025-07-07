@@ -228,6 +228,26 @@ function verificarToken(req, res, next) {
   }
 }
 
+// ✅ Ruta para listar todos los usuarios
+app.get('/api/usuarios', (req, res) => {
+  const query = `
+    SELECT id, nombre, apellido, correo, tipo_documento, documento, 
+           DATE_FORMAT(fecha_registro, '%d/%m/%Y %H:%i:%s') AS fecha_registro, tipo_usuario
+    FROM usuarios
+    ORDER BY fecha_registro DESC
+  `;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('❌ Error al listar usuarios:', err.message);
+      return res.status(500).json({ mensaje: 'Error al listar usuarios', error: err.message });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
+
 // a. script para el juego
 app.post('/api/juego/guardar-puntaje', (req, res) => {
   const { usuario_id, puntaje } = req.body;
@@ -264,6 +284,40 @@ app.post('/api/juego/guardar-puntaje', (req, res) => {
   });
 });
 
+// 🔍 Listar cursos
+app.get('/api/cursos', (req, res) => {
+  const query = 'SELECT * FROM cursos WHERE estado = "activo"';
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('❌ Error al obtener cursos:', err.message);
+      return res.status(500).json({ error: 'Error al obtener cursos', detalle: err.message });
+    }
+    res.status(200).json(results);
+  });
+});
+
+// ➕ Registrar nuevo curso
+app.post('/api/cursos', (req, res) => {
+  const { nombre, duracion, horario, precio, modalidad, extra, estado } = req.body;
+
+  if (!nombre || !duracion || !horario || !precio || !modalidad || !estado) {
+    return res.status(400).json({ error: 'Todos los campos obligatorios deben ser completados' });
+  }
+
+  const query = `
+    INSERT INTO cursos (nombre, duracion, horario, precio, modalidad, extra, estado) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  connection.query(query, [nombre, duracion, horario, precio, modalidad, extra, estado], (err, result) => {
+    if (err) {
+      console.error('❌ Error al registrar curso:', err.message);
+      return res.status(500).json({ error: 'Error al registrar curso', detalle: err.message });
+    }
+
+    res.status(201).json({ mensaje: '✅ Curso registrado correctamente', id: result.insertId });
+  });
+});
 
 
 // ✅ Ruta protegida (fuera de la función verificarToken)

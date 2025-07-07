@@ -8,7 +8,6 @@
     <p>📅 Fecha de registro: <strong>{{ fechaRegistro }}</strong></p>
     <p>🔑 Tipo de usuario: <strong>{{ tipoUsuario }}</strong></p>
     <p>📧 Correo: <strong>{{ correoUsuario }}</strong></p>
-
   </div>
 
   <div class="stats">
@@ -27,5 +26,152 @@
     <ng-template #sinCursos>
       <p>❌ Aún no tienes puntos suficientes para canjear cursos.</p>
     </ng-template>
+  </div>
+
+  <!-- ✅ Solo ADMIN y DOCENTE ven las pestañas -->
+  <div class="perfil-container">
+
+    <div *ngIf="puedeVerCursos() || puedeVerUsuarios()" class="tabs">
+      <div class="tab" [class.active]="mostrarTablaUsuarios" *ngIf="puedeVerUsuarios()" (click)="verUsuarios()">
+        Usuarios Registrados
+      </div>
+      <div class="tab" [class.active]="mostrarTablaCursos" *ngIf="puedeVerCursos()" (click)="listarCursos()">
+        Cursos con Certificación
+      </div>
+    </div>
+
+    <!-- Tabla de usuarios (solo admin) -->
+    <div class="contenido" *ngIf="mostrarTablaUsuarios">
+      <div class="filtros">
+        <input type="text" [(ngModel)]="filtroNombre" (input)="filtrarUsuarios()" placeholder="Buscar por nombre o apellido...">
+        <select [(ngModel)]="cantidadFilas" (change)="filtrarUsuarios()">
+          <option [value]="10">10 filas</option>
+          <option [value]="50">50 filas</option>
+          <option [value]="100">100 filas</option>
+        </select>
+      </div>
+
+      <div class="tabla-responsive">
+        <table class="tabla-usuarios">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombres y Apellidos</th>
+              <th>Correo</th>
+              <th>Tipo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of usuariosFiltrados">
+              <td>{{ u.id }}</td>
+              <td>{{ u.nombre + ' ' + u.apellido }}</td>
+              <td>{{ u.correo }}</td>
+              <td>{{ u.tipo_usuario }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tabla con canje solo para estándar, siempre visible -->
+    <div class="contenido" *ngIf="tipoUsuario === 'estandar'">
+      <div class="tabla-responsive">
+        <table class="tabla-usuarios">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Duración</th>
+              <th>Horario</th>
+              <th>Precio</th>
+              <th>Modalidad</th>
+              <th>Incluye</th>
+              <th>Canjear</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of cursosFiltrados">
+              <td>{{ c.nombre }}</td>
+              <td>{{ c.duracion }}</td>
+              <td>{{ c.horario }}</td>
+              <td>S/ {{ c.precio }}</td>
+              <td>{{ c.modalidad }}</td>
+              <td>{{ c.extra }}</td>
+              <td><button (click)="canjearCurso(c)">🎁 Canjear</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tabla completa solo para admin/docente -->
+    <div class="contenido" *ngIf="mostrarTablaCursos && (puedeVerCursos() || puedeVerUsuarios())">
+      <div class="filtros">
+        <input type="text" [(ngModel)]="filtroNombre" (input)="filtrarCursos()" placeholder="Buscar cursos...">
+        <select [(ngModel)]="cantidadFilas" (change)="filtrarCursos()">
+          <option [value]="10">10 filas</option>
+          <option [value]="50">50 filas</option>
+          <option [value]="100">100 filas</option>
+        </select>
+        <button (click)="modalCurso.showModal()">➕ Nuevo Curso</button>
+      </div>
+
+      <div class="tabla-responsive">
+        <table class="tabla-usuarios">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Duración</th>
+              <th>Horario</th>
+              <th>Precio</th>
+              <th>Modalidad</th>
+              <th>Incluye</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of cursosFiltrados">
+              <td>{{ c.id }}</td>
+              <td>{{ c.nombre }}</td>
+              <td>{{ c.duracion }}</td>
+              <td>{{ c.horario }}</td>
+              <td>S/ {{ c.precio }}</td>
+              <td>{{ c.modalidad }}</td>
+              <td>{{ c.extra }}</td>
+              <td>{{ c.estado }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <dialog #modalCurso>
+      <h3>➕ Registrar Curso</h3>
+      <form (submit)="registrarCurso(); modalCurso.close(); $event.preventDefault()">
+        <input type="text" placeholder="Nombre del curso " [(ngModel)]="nuevoCurso.nombre" name="nombre" required>
+        <input type="text" placeholder="Duración (Ej: 4 semanas)" [(ngModel)]="nuevoCurso.duracion" name="duracion" required>
+        <input type="text" placeholder="Horario (Ej: Lunes 7pm a 10pm)" [(ngModel)]="nuevoCurso.horario" name="horario" required>
+        <!--<input type="number" placeholder="Precio" [(ngModel)]="nuevoCurso.precio" name="precio" required>-->
+        <input type="number"
+       placeholder="Precio (Ej: 100.00)"
+       [(ngModel)]="nuevoCurso.precio"
+       name="precio"
+       required
+       min="1"
+       (input)="validarPrecio()">
+
+        <input type="text" placeholder="Modalidad (Ej:Presencial o Virtual)" [(ngModel)]="nuevoCurso.modalidad" name="modalidad" required>
+        <input type="text" placeholder="Incluye (Ej: certificado)" [(ngModel)]="nuevoCurso.extra" name="extra">
+        <select [(ngModel)]="nuevoCurso.estado" name="estado">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+        <div>
+          <button type="submit">Guardar</button>
+          <button type="button" (click)="modalCurso.close()">Cancelar</button>
+        </div>
+      </form>
+    </dialog>
+
   </div>
 </div>
