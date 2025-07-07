@@ -38,29 +38,33 @@ export class PerfilComponent implements OnInit {
     if (!this.isBrowser) return;
 
     const usuario = sessionStorage.getItem('usuario');
-    if (!usuario) return;
+    if (!usuario) {
+      console.error('⚠️ No hay usuario en sessionStorage');
+      return;
+    }
 
     const userData = JSON.parse(usuario);
 
-    // 🔍 Cambiar a ?accion=perfil&id=...
-    this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userData.id}`).subscribe({
+    this.obtenerPerfil(userData.id);
+    this.obtenerProgreso(userData.id);
+  }
+
+  private obtenerPerfil(userId: number) {
+    this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userId}`).subscribe({
       next: perfil => {
-        this.nombreUsuario = perfil.nombre ?? '';
-        this.apellidoUsuario = perfil.apellido ?? '';
-        this.correoUsuario = perfil.correo ?? '';
-        this.tipoDocumento = perfil.tipo_documento ?? '';
-        this.documento = perfil.documento ?? '';
-        this.fechaRegistro = perfil.fecha_registro ?? '';
-        this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
+        this.nombreUsuario = perfil.nombre || '';
+        this.apellidoUsuario = perfil.apellido || '';
+        this.correoUsuario = perfil.correo || '';
+        this.tipoDocumento = perfil.tipo_documento || '';
+        this.documento = perfil.documento || '';
+        this.fechaRegistro = perfil.fecha_registro || '';
+        this.tipoUsuario = perfil.tipo_usuario || 'estandar';
         this.edad = this.calcularEdad(perfil.fecha_nacimiento);
       },
       error: err => {
         console.error('❌ Error al cargar perfil:', err);
       }
     });
-
-    // ✔️ Esto aún no lo tienes implementado en PHP, así que fallará si no existe la ruta
-    this.obtenerProgreso(userData.id);
   }
 
   private obtenerProgreso(userId: number) {
@@ -76,11 +80,12 @@ export class PerfilComponent implements OnInit {
         this.puntaje = 0;
         this.nivel = 1;
         this.medallas = '';
+        this.cargarCursos(); // Mostrar cursos por puntaje cero
       }
     });
   }
 
-  calcularEdad(fechaNacimiento: string): string {
+  private calcularEdad(fechaNacimiento: string): string {
     if (!fechaNacimiento) return '';
 
     const nacimiento = new Date(fechaNacimiento);
@@ -105,7 +110,6 @@ export class PerfilComponent implements OnInit {
 
   cargarCursos() {
     this.cursosDisponibles = [];
-
     if (this.puntaje >= 100) this.cursosDisponibles.push('Curso básico de reciclaje ♻️');
     if (this.puntaje >= 300) this.cursosDisponibles.push('Curso de manejo de residuos sólidos 🗑️');
     if (this.puntaje >= 500) this.cursosDisponibles.push('Certificación en Gestión Ambiental 🌱');
