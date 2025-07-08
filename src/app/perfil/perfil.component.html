@@ -174,4 +174,24 @@
     </dialog>
 
   </div>
+
+
+  <!-- Modal simple -->
+<div class="modal" tabindex="-1" [ngClass]="{ 'show': mostrarModal }" [ngStyle]="{ 'display': mostrarModal ? 'block' : 'none', 'background-color': 'rgba(0, 0, 0, 0.5)' }">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Mensaje</h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p>{{ mensajeModal }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>

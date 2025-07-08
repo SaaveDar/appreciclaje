@@ -16,8 +16,9 @@ export class InicioComponent implements AfterViewInit, OnDestroy {
   slides = [
     {
       imagen: 'assets/images/slider/imagen1.jpg',
-      titulo: 'Recicla con Inteligencia',
-      descripcion: 'Identifica y clasifica residuos fácilmente con nuestra app educativa.'
+      titulo: 'EcoConciencia en comunidad',
+      descripcion: 'Forma parte de una red de usuarios comprometidos con el planeta.'
+      
     },
     {
       imagen: 'assets/images/slider/imagen2.jpg',
@@ -25,14 +26,14 @@ export class InicioComponent implements AfterViewInit, OnDestroy {
       descripcion: 'Localiza centros de reciclaje y reduce tu impacto ambiental.'
     },
     {
-      imagen: 'assets/images/slider/imagen1.jpg',
+      imagen: 'assets/images/slider/imagen3.jpg',
       titulo: 'Aprende y gana',
       descripcion: 'Participa en juegos interactivos y gana recompensas mientras aprendes.'
     },
     {
-      imagen: 'assets/images/slider/imagen2.jpg',
-      titulo: 'EcoConciencia en comunidad',
-      descripcion: 'Forma parte de una red de usuarios comprometidos con el planeta.'
+      imagen: 'assets/images/slider/imagen4.jpg',
+      titulo: 'Recicla con Inteligencia',
+      descripcion: 'Identifica y clasifica residuos fácilmente con nuestra app educativa.'
     }
   ];
 

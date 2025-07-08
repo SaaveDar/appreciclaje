@@ -232,7 +232,12 @@ cerrarModal() {
       this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: null, modalidad: '', extra: '', estado: 'activo' };
     },
     //error: err => console.error('❌ Error al registrar curso:', err)
-    error: err => this.mostrarMensaje('❌ Error al registrar curso: ' + (err.error?.error || 'Error desconocido'))
+    //error: err => this.mostrarMensaje('❌ Error al registrar curso: ' + (err.error?.error || 'Error desconocido'))
+    error: err => {
+      // ➤ Mostrar el mensaje que viene del backend (si existe), si no, mostrar un error genérico
+      const mensajeError = err.error?.error || '❌ Error al registrar curso';
+      this.mostrarMensaje(mensajeError);
+    }
   });
 }
 
