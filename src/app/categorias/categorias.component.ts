@@ -3,13 +3,11 @@ import {
   OnInit,
   OnDestroy,
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Inject,
-  PLATFORM_ID
+  ChangeDetectorRef
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { TiposResiduosService, TipoResiduo } from '../servicios/tipos-residuos.service';
 import { SocketService } from '../servicios/socket.service';
+import { CommonModule } from '@angular/common';
 import { interval, Subscription } from 'rxjs';
 import {
   trigger,
@@ -45,32 +43,30 @@ export class CategoriasComponent implements OnInit, OnDestroy {
   carruseles: { [id: number]: Subscription } = {};
   cambiosSocket$: Subscription | undefined;
   cargando: boolean = true;
-  isBrowser: boolean;
 
   constructor(
     private tiposService: TiposResiduosService,
     private socketService: SocketService,
-    private cdr: ChangeDetectorRef,
-    @Inject(PLATFORM_ID) private platformId: Object
-  ) {
-    this.isBrowser = isPlatformBrowser(platformId);
-  }
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    if (this.isBrowser) {
-      this.cargarDatosIniciales();
+    this.cargarDatosIniciales();
 
+    // Solo activar WebSocket si está en el navegador
+    if (typeof window !== 'undefined') {
       this.cambiosSocket$ = this.socketService.escucharCambiosTiposResiduos().subscribe((nuevosDatos: TipoResiduo[]) => {
         this.tiposResiduos = nuevosDatos;
         nuevosDatos.forEach(tipo => {
-          this.imagenIndex[tipo.id] ??= 0;
-          this.tarjetasVolteadas[tipo.id] ??= false;
+          if (this.imagenIndex[tipo.id] === undefined) {
+            this.imagenIndex[tipo.id] = 0;
+          }
+          if (this.tarjetasVolteadas[tipo.id] === undefined) {
+            this.tarjetasVolteadas[tipo.id] = false;
+          }
         });
         this.cdr.detectChanges();
       });
-    } else {
-      // SSR: simula carga vacía o deja cargando = false si quieres
-      this.cargando = false;
     }
   }
 
@@ -80,12 +76,12 @@ export class CategoriasComponent implements OnInit, OnDestroy {
     this.tiposService.obtenerTipos().subscribe(data => {
       this.tiposResiduos = data;
       data.forEach(tipo => {
-        this.imagenIndex[tipo.id] ??= 0;
-        this.tarjetasVolteadas[tipo.id] ??= false;
+        this.imagenIndex[tipo.id] = this.imagenIndex[tipo.id] ?? 0;
+        this.tarjetasVolteadas[tipo.id] = this.tarjetasVolteadas[tipo.id] ?? false;
       });
 
-      // Solo navegador: medir tiempo
-      if (this.isBrowser && 'performance' in window) {
+      // Solo mostrar tiempo si existe performance API (navegador)
+      if (typeof window !== 'undefined' && 'performance' in window) {
         const tiempo = performance.now();
         console.log(`⏱ Carga completada en: ${tiempo.toFixed(2)} ms`);
       }
@@ -138,7 +134,7 @@ export class CategoriasComponent implements OnInit, OnDestroy {
   }
 
   private iniciarCarrusel(id: number): void {
-    if (!this.isBrowser || this.carruseles[id]) return;
+    if (this.carruseles[id]) return;
 
     this.carruseles[id] = interval(4000).subscribe(() => {
       const tipo = this.tiposResiduos.find(t => t.id === id);
