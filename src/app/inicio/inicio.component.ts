@@ -32,7 +32,7 @@ export class InicioComponent implements AfterViewInit, OnDestroy {
     },
     {
       imagen: 'assets/images/slider/imagen4.jpg',
-      titulo: 'Recicla con Inteligencia',
+      titulo: 'Conoce y aprende a reciclar con Ecorecicla',
       descripcion: 'Identifica y clasifica residuos fácilmente con nuestra app educativa.'
     }
   ];

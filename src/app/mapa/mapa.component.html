@@ -12,6 +12,14 @@
   <div class="card">
     <h2 class="title">GreenIA</h2>
 
+    <div class="conversacion">
+      <div *ngFor="let msg of mensajesIA" [ngClass]="msg.tipo === 'usuario' ? 'mensaje usuario' : 'mensaje ia'">
+        <span *ngIf="msg.tipo === 'ia'" [innerHTML]="msg.texto"></span>
+        <span *ngIf="msg.tipo === 'usuario'">{{ msg.texto }}</span>
+      </div>
+    </div>
+
+    <!-- input del usuario-->
     <div class="input-group">
       <input
         type="text"
@@ -24,13 +32,6 @@
         (click)="procesarPrompt()"
         [disabled]="isWaitingForResponse" >
         {{ isWaitingForResponse ? 'Detener' : 'Enviar' }} </button>
-    </div>
-
-    <div class="conversacion">
-      <div *ngFor="let msg of mensajesIA" [ngClass]="msg.tipo === 'usuario' ? 'mensaje usuario' : 'mensaje ia'">
-        <span *ngIf="msg.tipo === 'ia'" [innerHTML]="msg.texto"></span>
-        <span *ngIf="msg.tipo === 'usuario'">{{ msg.texto }}</span>
-      </div>
     </div>
 
 

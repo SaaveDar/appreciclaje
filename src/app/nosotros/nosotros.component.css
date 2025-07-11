@@ -1,3 +1,4 @@
+/* Estilo general */
 .nosotros {
   padding: 60px 20px;
   background-color: #e8f5e9;
@@ -7,17 +8,20 @@
   letter-spacing: 0.2px;
 }
 
+/* Contenedor centralizado */
 .container {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 15px;
 }
 
+/* Títulos principales */
 h1 {
   font-size: 3rem;
   margin-bottom: 24px;
   color: #2e7d32;
   font-weight: 700;
+  text-align: center;
 }
 
 h2 {
@@ -28,12 +32,15 @@ h2 {
   font-weight: 600;
 }
 
+/* Párrafos */
 p {
   font-size: 1.15rem;
   color: #424242;
   margin-bottom: 20px;
+  text-align: justify;
 }
 
+/* Listas */
 ul {
   margin-top: 20px;
   padding-left: 25px;
@@ -43,4 +50,77 @@ ul {
 li {
   font-size: 1.1rem;
   margin-bottom: 12px;
+}
+
+/* Imágenes responsivas */
+img.img-responsive,
+img.img-fluid {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 20px auto;
+  border-radius: 8px;
+}
+
+/* RESPONSIVE - Ajustes por tamaños */
+@media (max-width: 1024px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+  }
+
+  p {
+    font-size: 1.05rem;
+  }
+
+  li {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .nosotros {
+    padding: 40px 15px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  p {
+    font-size: 1rem;
+  }
+
+  li {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nosotros {
+    padding: 30px 10px;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  p {
+    font-size: 0.95rem;
+  }
+
+  li {
+    font-size: 0.95rem;
+  }
 }
