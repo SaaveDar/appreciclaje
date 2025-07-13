@@ -124,3 +124,60 @@ img.img-fluid {
     font-size: 0.95rem;
   }
 }
+
+
+/* --- Estilo general ya existente aquí arriba... --- */
+
+.media-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 40px 0;
+  gap: 20px;
+}
+
+.media-row img {
+  width: 300px;
+  height: auto;
+  max-width: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Alternancia */
+.media-row.imagen-izquierda img {
+  order: 0;
+}
+
+.media-row.imagen-izquierda div {
+  order: 1;
+  flex: 1;
+}
+
+.media-row.imagen-derecha img {
+  order: 1;
+}
+
+.media-row.imagen-derecha div {
+  order: 0;
+  flex: 1;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .media-row {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .media-row img {
+    width: 80%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .media-row div {
+    width: 100%;
+  }
+}

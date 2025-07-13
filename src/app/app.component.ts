@@ -149,34 +149,38 @@ export class AppComponent implements OnInit {
     this.mensajeError = '';
   }
 
-  login() {
-    const credenciales = {
-      correo: this.loginEmail,
-      contrasena: this.loginPassword
-    };
+login() {
+  const credenciales = {
+    correo: this.loginEmail,
+    contrasena: this.loginPassword
+  };
 
-    this.authService.loginUsuario(credenciales).subscribe({
-      next: (res: any) => {
-        this.usuarioLogueado = res.usuario;
+  this.authService.loginUsuario(credenciales).subscribe({
+    next: (res: any) => {
+      this.usuarioLogueado = res.usuario;
 
-        if (isPlatformBrowser(this.platformId)) {
-          sessionStorage.setItem('usuario', JSON.stringify(res.usuario));
-          sessionStorage.setItem('token', res.token);
-        }
-
-        this.authService.actualizarUsuario(res.usuario);
-
-        this.isLoggedIn = true;
-        this.cerrarModal();
-        this.mensajeError = '';
-      },
-      error: (err) => {
-        console.error('❌ Error en login:', err);
-        this.mensajeError = err?.error?.mensaje || '❌ Error al iniciar sesión';
-        this.isLoggedIn = false;
+      if (isPlatformBrowser(this.platformId)) {
+        // ✅ Guardar ID, nombre y token por separado
+        sessionStorage.setItem('usuario_id', String(res.usuario.id));          // Necesario para juego
+        sessionStorage.setItem('usuario_nombre', res.usuario.nombre);          // Útil para IA o saludo
+        sessionStorage.setItem('token', res.token);                            // Para autenticación
+        sessionStorage.setItem('usuario', JSON.stringify(res.usuario));        // Por si quieres todo junto
       }
-    });
-  }
+
+      // 🔄 Actualiza observable global de sesión
+      this.authService.actualizarUsuario(res.usuario);
+
+      this.isLoggedIn = true;
+      this.cerrarModal();
+      this.mensajeError = '';
+    },
+    error: (err) => {
+      console.error('❌ Error en login:', err);
+      this.mensajeError = err?.error?.mensaje || '❌ Error al iniciar sesión';
+      this.isLoggedIn = false;
+    }
+  });
+}
 
   
   cerrarSesion() {

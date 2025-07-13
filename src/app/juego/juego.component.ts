@@ -1,12 +1,33 @@
-import { Component, Inject, PLATFORM_ID } from '@angular/core';
+// src/app/juego/juego.component.ts
+import { Component, Inject, PLATFORM_ID, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import confetti from 'canvas-confetti'; // ⬅️ al inicio del archivo
+import { Router } from '@angular/router';
+import confetti from 'canvas-confetti';
+
+interface Pregunta {
+  pregunta: string;
+  opciones: string[];
+  respuesta: number;
+}
 
 interface Residuo {
   nombre: string;
   tipo: string;
   imagen: string;
+}
+
+interface Contenedor {
+  tipo: string;
+  nombre: string;
+  imagen: string;
+}
+
+interface NivelConfig {
+  tipo: 'quiz' | 'arrastrar';
+  preguntas?: Pregunta[];
+  residuos?: Residuo[];
+  contenedores?: Contenedor[];
 }
 
 @Component({
@@ -16,131 +37,478 @@ interface Residuo {
   templateUrl: './juego.component.html',
   styleUrls: ['./juego.component.css']
 })
-export class JuegoComponent {
-  residuos: Residuo[] = [];
-  tachos = ['plastico', 'papel', 'organico', 'metal'];
+export class JuegoComponent implements OnInit {
+  mensajeVisible = false;
+  mensajeTexto = '';
+  mensajeTipo: 'exito' | 'error' | 'advertencia' = 'exito';
+  respuestaIncorrecta = false; // Indica si la respuesta fue incorrecta o no hubo respuesta
+  todasCorrectas = true; // asume que el usuario es perfecto... hasta que falle
+  arrastreCorrecto: boolean = true; // ✅ Asume todo correcto, se anula si falla 1
+
+
+  usuario_id = 0;
+  nivelActual = 0;
   puntaje = 0;
-  mensaje = '';
-  residuoSeleccionado: Residuo | null = null;
-  esMovil = false;
+  medallas = '';
+  niveles: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  constructor(
+  mostrarModal = false;
+  respuestaSeleccionada: number | null = null;
+  tipoJuego: 'quiz' | 'arrastrar' = 'quiz';
+  nivelSeleccionado = 0;
+  preguntaActual = 0;
+  puntajeJuego = 0;
+
+  preguntas: Pregunta[] = [];
+  residuos: Residuo[] = [];
+  contenedores: Contenedor[] = [];
+  draggedTipo: string = '';
+
+  timer: any;
+  tiempoRestante = 20;
+  temporizadorActivo = false;
+  bloquearPregunta: boolean = false;
+
+  nivelesConfig: { [nivel: number]: NivelConfig } = {
+    1: {
+      tipo: 'quiz',
+      preguntas: [
+        {
+          pregunta: '¿Qué material es 100% reciclable?',
+          opciones: ['Plástico', 'Vidrio', 'Orgánico', 'Madera'],
+          respuesta: 0
+        },
+        {
+          pregunta: '¿Qué color representa los residuos orgánicos?',
+          opciones: ['Rojo', 'Verde', 'Negro', 'Amarillo'],
+          respuesta: 2
+        },
+        {
+          pregunta: '¿Qué tipo de residuo va en el contenedor amarillo?',
+          opciones: ['Papel', 'Metal', 'Plástico', 'Orgánico'],
+          respuesta: 1
+        }
+      ]
+    },
+    2: {
+      tipo: 'arrastrar',
+      residuos: [
+        { nombre: 'Botella', tipo: 'plastico', imagen: 'botellas_plastico.png' },
+        { nombre: 'Cáscara de plátano', tipo: 'organico', imagen: 'cascara.png' },
+        { nombre: 'Papel', tipo: 'papel', imagen: 'papel.png' },
+        { nombre: 'Vidrio roto', tipo: 'vidrio', imagen: 'botella.png' }
+      ],
+      contenedores: [
+        { tipo: 'plastico', nombre: 'Naranja', imagen: 'naranja.png' },
+        { tipo: 'papel', nombre: 'Azul', imagen: 'azul.png' },
+        { tipo: 'vidrio', nombre: 'Verde', imagen: 'verde.png' },
+        { tipo: 'organico', nombre: 'Plomo', imagen: 'plomo.png' }
+      ]
+    },
+    3: {
+      tipo: 'quiz',
+      preguntas: [
+        {
+          pregunta: '¿Qué producto es más dañino para el ambiente?',
+          opciones: ['Batería', 'Cáscara de plátano', 'Vidrio', 'Cartón'],
+          respuesta: 0
+        },
+        {
+          pregunta: '¿Cuál es el símbolo universal del reciclaje?',
+          opciones: ['♻️', '🗑️', '♨️', '✅'],
+          respuesta: 0
+        }
+      ]
+    },
+    4: {
+    tipo: 'quiz',
+    preguntas: [
+      {
+        pregunta: '¿Qué residuo tarda más en degradarse?',
+        opciones: ['Papel', 'Vidrio', 'Cáscara de fruta', 'Cartón'],
+        respuesta: 1
+      },
+      {
+        pregunta: '¿Cuál es el principal beneficio del reciclaje?',
+        opciones: [
+          'Aumentar la basura',
+          'Ahorrar recursos naturales',
+          'Gastar más energía',
+          'Generar más residuos'
+        ],
+        respuesta: 1
+      }
+    ]
+  },
+  5: {
+    tipo: 'arrastrar',
+    residuos: [
+      { nombre: 'Plancha rota', tipo: 'electrodomestico', imagen: 'plancha.png' }, // nuevo residuo
+      { nombre: 'Envase de yogur', tipo: 'plastico', imagen: 'envases_yogurt.png' }, // reemplazo
+      { nombre: 'Caja de cartón', tipo: 'papel', imagen: 'caja.png' },
+      { nombre: 'Taza rota', tipo: 'vidrio', imagen: 'taza_rota.png' }
+    ],
+    contenedores: [
+      { tipo: 'plastico', nombre: 'Amarillo', imagen: 'amarillo.png' },
+      { tipo: 'papel', nombre: 'Azul', imagen: 'azul.png' },
+      { tipo: 'vidrio', nombre: 'Verde', imagen: 'verde.png' },
+      { tipo: 'electrodomestico', nombre: 'Rojo', imagen: 'rojo.png' } // nuevo contenedor
+    ]
+  },
+  6: {
+    tipo: 'quiz',
+    preguntas: [
+      {
+        pregunta: '¿Qué tipo de residuos van en el contenedor azul?',
+        opciones: ['Plástico', 'Vidrio', 'Papel', 'Orgánico'],
+        respuesta: 2
+      },
+      {
+        pregunta: '¿Qué debemos hacer antes de reciclar una botella plástica?',
+        opciones: ['Romperla', 'Ensuciarla', 'Aplastarla y enjuagarla', 'Quemarla'],
+        respuesta: 2
+      }
+    ]
+  },
+  7: {
+    tipo: 'quiz',
+    preguntas: [
+      {
+        pregunta: '¿Cuál de estos elementos se puede reutilizar fácilmente en casa?',
+        opciones: ['Aceite usado', 'Botella de vidrio', 'Cáscara de huevo', 'Cigarrillos'],
+        respuesta: 1
+      },
+      {
+        pregunta: '¿Qué acción ayuda más al reciclaje desde casa?',
+        opciones: ['Tirar todo en una sola bolsa', 'Separar los residuos por tipo', 'Quemar la basura', 'Usar bolsas negras para todo'],
+        respuesta: 1
+      }
+    ]
+  },
+  8: {
+    tipo: 'quiz',
+    preguntas: [
+      {
+        pregunta: '¿Qué tipo de residuo representa un riesgo para la salud si no se maneja adecuadamente?',
+        opciones: ['Papel', 'Restos de comida', 'Pilas', 'Cartón'],
+        respuesta: 2
+      },
+      {
+        pregunta: '¿Qué debe hacerse con los aparatos electrónicos en desuso?',
+        opciones: ['Tirarlos al tacho común', 'Llevarlos a un punto limpio o especial', 'Regalarlos sin verificar su estado', 'Enterrarlos en el jardín'],
+        respuesta: 1
+      },
+      {
+        pregunta: '¿Cuál de estos hábitos reduce la generación de residuos?',
+        opciones: ['Comprar productos con mucho empaque', 'Usar bolsas reutilizables', 'Consumir productos desechables', 'Imprimir documentos innecesarios'],
+        respuesta: 1
+      }
+    ]
+  },
+  9: {
+    tipo: 'quiz',
+    preguntas: [
+      {
+        pregunta: '¿Qué acción es mejor para cuidar el medio ambiente?',
+        opciones: ['Usar el auto para todo', 'Separar residuos en casa', 'Comprar productos desechables', 'Usar agua sin control'],
+        respuesta: 1
+      },
+      {
+        pregunta: '¿Cuál es una alternativa ecológica al papel de aluminio?',
+        opciones: ['Plástico film', 'Papel reciclado', 'Servilletas de papel', 'Tela encerada reutilizable'],
+        respuesta: 3
+      },
+      {
+        pregunta: '¿Qué material contamina más los mares?',
+        opciones: ['Cáscaras de frutas', 'Hojas secas', 'Botellas plásticas', 'Cartón mojado'],
+        respuesta: 2
+      }
+    ]
+  },
+  10: {
+    tipo: 'quiz',
+    preguntas: [
+      {
+        pregunta: '¿Qué significa la economía circular?',
+        opciones: [
+          'Un modelo que busca reciclar y reutilizar continuamente',
+          'Un sistema donde todo se desecha rápidamente',
+          'Una forma de gastar más recursos naturales',
+          'Una política de comprar sin límites'
+        ],
+        respuesta: 0
+      },
+      {
+        pregunta: '¿Qué residuo puede usarse para hacer compost en casa?',
+        opciones: ['Pilas usadas', 'Cáscaras de fruta', 'Vidrio roto', 'Envases metálicos'],
+        respuesta: 1
+      }
+    ]
+  }
+
+  };
+
+    constructor(
     private http: HttpClient,
+    private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {
-    this.reiniciarJuego();
-    this.detectarMovil();
-  }
+  ) {}
 
-  detectarMovil() {
+  iniciarTemporizador(): void {
+  clearInterval(this.timer);
+  this.tiempoRestante = 20;
+  this.temporizadorActivo = true;
+  this.bloquearPregunta = false;
+
+  this.timer = setInterval(() => {
+    this.tiempoRestante--;
+
+    if (this.tiempoRestante <= 0) {
+      clearInterval(this.timer);
+      this.temporizadorActivo = false;
+      this.bloquearPregunta = true;
+
+      this.todasCorrectas = false; // ⛔ No respondió → error
+
+      setTimeout(() => {
+        this.preguntaActual++;
+        this.respuestaSeleccionada = null;
+
+        if (this.preguntaActual >= this.preguntas.length) {
+          this.finalizarQuiz();
+        } else {
+          this.iniciarTemporizador();
+        }
+      }, 800);
+    }
+  }, 1000);
+}
+
+
+
+  ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      const toques = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      this.esMovil = toques;
-    }
-  }
-
-  permitirSoltar(event: DragEvent) {
-    event.preventDefault();
-  }
-
-  iniciarArrastre(event: DragEvent, residuo: Residuo) {
-    if (!this.esMovil) {
-      event.dataTransfer?.setData('text/plain', JSON.stringify(residuo));
-    }
-  }
-
-  seleccionarResiduo(residuo: Residuo) {
-    if (this.esMovil) {
-      this.residuoSeleccionado = residuo;
-    }
-  }
-
-  soltar(event: DragEvent, tipoTacho: string) {
-    if (!this.esMovil) {
-      event.preventDefault();
-      const data = event.dataTransfer?.getData('text/plain');
-      if (data) {
-        const residuo: Residuo = JSON.parse(data);
-        this.validarResiduo(residuo, tipoTacho);
+      const usuario = sessionStorage.getItem('usuario_id');
+      if (usuario) {
+        this.usuario_id = Number(usuario);
+        this.obtenerProgreso();
+      } else {
+        this.mostrarMensaje('⚠️ No se encontró sesión de usuario', 'advertencia');
+        this.router.navigate(['/inicio']);
       }
     }
   }
 
-  soltarTactil(tipoTacho: string) {
-    if (this.esMovil && this.residuoSeleccionado) {
-      this.validarResiduo(this.residuoSeleccionado, tipoTacho);
-      this.residuoSeleccionado = null;
-    }
-  }
-
-  validarResiduo(residuo: Residuo, tipoTacho: string) {
-    if (residuo.tipo === tipoTacho) {
-      this.puntaje += 10;
-      this.mensaje = `✅ ¡Correcto! ${residuo.nombre} va en el tacho ${tipoTacho}.`;
-    } else {
-      this.puntaje -= 5;
-      this.mensaje = `❌ ${residuo.nombre} no va en el tacho ${tipoTacho}.`;
-    }
-
-    this.residuos = this.residuos.filter(r => r !== residuo);
-
-    if (this.residuos.length === 0) {
-      this.mensaje += ` 🎉 Puntaje final: ${this.puntaje}`;
-      this.guardarPuntajeEnBD();
-    }
-  }
-
-  reiniciarJuego() {
-    this.puntaje = 0;
-    this.mensaje = '';
-    this.residuoSeleccionado = null;
-    this.residuos = [
-      { nombre: 'Botella de plástico', tipo: 'plastico', imagen: 'assets/residuos/botella.png' },
-      { nombre: 'Periódico', tipo: 'papel', imagen: 'assets/residuos/periodico.png' },
-      { nombre: 'Cáscara de plátano', tipo: 'organico', imagen: 'assets/residuos/cascara.png' },
-      { nombre: 'Lata de gaseosa', tipo: 'metal', imagen: 'assets/residuos/lata.png' }
-    ];
-  }
-
-  guardarPuntajeEnBD() {
-    const usuario = sessionStorage.getItem('usuario');
-    if (!usuario) return;
-
-    const userData = JSON.parse(usuario);
-    const body = {
-      usuario_id: userData.id,
-      puntaje: this.puntaje
-    };
-
-    this.http.post('http://localhost:3000/api/juego/guardar-puntaje', body).subscribe({
-    next: (res: any) => {
-      console.log(res.mensaje);
-      this.mostrarCelebracion(); // 🎉 Aquí llamamos al confeti
-    },
-    error: (err) => console.error('❌ Error al guardar progreso:', err)
-  });
-  }
-
-  mostrarCelebracion() {
-  const duration = 3 * 1000;
-  const animationEnd = Date.now() + duration;
-  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
-
-  const interval = setInterval(function () {
-    const timeLeft = animationEnd - Date.now();
-
-    if (timeLeft <= 0) {
-      return clearInterval(interval);
-    }
-
-    const particleCount = 50 * (timeLeft / duration);
-
-    confetti({
-      ...defaults,
-      particleCount,
-      origin: { x: Math.random(), y: Math.random() - 0.2 }
+  obtenerProgreso(): void {
+    this.http.get<any>(`http://localhost:3000/api/progreso/${this.usuario_id}`).subscribe({
+      next: data => {
+        this.nivelActual = data.nivel;
+        this.puntaje = data.puntaje;
+        this.medallas = data.medallas;
+      },
+      error: err => {
+        this.mostrarMensaje('❌ Error al cargar tu progreso', 'error');
+      }
     });
-  }, 250);
+  }
+
+  mostrarMensaje(texto: string, tipo: 'exito' | 'error' | 'advertencia' = 'exito'): void {
+    this.mensajeTexto = texto;
+    this.mensajeTipo = tipo;
+    this.mensajeVisible = true;
+    setTimeout(() => {
+      this.mensajeVisible = false;
+    }, 2000);
+  }
+
+  jugarNivel(nivel: number): void {
+  if (nivel > this.nivelActual + 1) {
+    this.mostrarMensaje('⚠️ Debes completar los niveles anteriores primero', 'advertencia');
+    return;
+  }
+
+  const config = this.nivelesConfig[nivel];
+  if (!config) {
+    this.mostrarMensaje('⚠️ Nivel no disponible aún', 'advertencia');
+    return;
+  }
+
+  this.nivelSeleccionado = nivel;
+  this.tipoJuego = config.tipo;
+  this.puntajeJuego = 0;
+  this.preguntaActual = 0;
+  this.todasCorrectas = true;
+  this.arrastreCorrecto = true; // 🔄 Reiniciar para cada nivel
+  this.respuestaSeleccionada = null;
+
+  if (config.tipo === 'quiz') {
+    this.preguntas = config.preguntas || [];
+    this.iniciarTemporizador();
+  } else if (config.tipo === 'arrastrar') {
+    this.residuos = [...(config.residuos || [])];
+    this.contenedores = config.contenedores || [];
+    this.iniciarTemporizador();
+  }
+
+  this.mostrarModal = true;
 }
 
+
+
+  seleccionarOpcion(indice: number): void {
+  if (this.respuestaSeleccionada !== null || this.bloquearPregunta) return;
+
+  clearInterval(this.timer);
+  this.temporizadorActivo = false;
+  this.respuestaSeleccionada = indice;
+
+  const correcta = this.preguntas[this.preguntaActual].respuesta;
+  const esCorrecta = indice === correcta;
+
+  if (!esCorrecta) {
+    this.todasCorrectas = false; // ❌ Hay al menos un error
+  } else {
+    this.puntajeJuego += 100;
+  }
+
+  setTimeout(() => {
+    this.preguntaActual++;
+    this.respuestaSeleccionada = null;
+
+    if (this.preguntaActual >= this.preguntas.length) {
+      this.finalizarQuiz(); // ⬅️ Aquí se decide si gana o no
+    } else {
+      this.iniciarTemporizador();
+    }
+  }, 1000);
 }
+
+
+
+  finalizarQuiz(): void {
+  if (this.todasCorrectas && this.puntajeJuego === this.preguntas.length * 100) {
+    this.mostrarMensaje('🎉 ¡Felicitaciones! Completaste el nivel correctamente 🎯', 'exito');
+    this.guardarPuntaje();
+  } else {
+    this.mostrarMensaje('❌ Fallaste alguna pregunta o no respondiste a tiempo', 'error');
+    this.mostrarModal = false;
+    this.todasCorrectas = true; // Reiniciar para siguiente intento
+  }
+}
+
+
+
+  drop(event: DragEvent, tipoContenedor: string): void {
+  event.preventDefault();
+
+  if (!this.draggedTipo || this.bloquearPregunta) return;
+
+  clearInterval(this.timer);
+  this.temporizadorActivo = false;
+
+  if (this.draggedTipo === tipoContenedor) {
+    this.puntajeJuego += 100;
+    this.mostrarMensaje('✅ ¡Correcto!', 'exito');
+  } else {
+    this.arrastreCorrecto = false; // ❌ Falló al arrastrar
+    this.mostrarMensaje('❌ Incorrecto', 'error');
+  }
+
+  this.residuos = this.residuos.filter(r => r.tipo !== this.draggedTipo);
+  this.draggedTipo = '';
+
+  if (this.residuos.length === 0) {
+    this.finalizarArrastrar(); // ✅ cuando ya no quedan residuos
+  } else {
+    this.iniciarTemporizador(); // ⏱️ para el siguiente
+  }
+}
+
+finalizarArrastrar(): void {
+  if (this.arrastreCorrecto && this.puntajeJuego > 0) {
+    this.mostrarMensaje('🎉 ¡Excelente! Completaste el nivel correctamente 🎯', 'exito');
+    this.guardarPuntaje();
+  } else {
+    this.mostrarMensaje('❌ Fallaste al arrastrar algún residuo. Intenta de nuevo', 'error');
+    this.mostrarModal = false;
+    this.arrastreCorrecto = true; // Reinicia para el siguiente intento
+  }
+}
+
+
+  dragStart(event: DragEvent, tipo: string): void {
+    this.draggedTipo = tipo;
+  }
+
+  allowDrop(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  calcularMedallaPorNivel(nivel: number): string {
+  if (nivel >= 9) return '🥇 Oro';
+  if (nivel >= 6) return '🥈 Plata';
+  if (nivel >= 3) return '🥉 Bronce';
+  return 'Sin medalla';
+}
+
+  guardarPuntaje(): void {
+  // Calculamos el nuevo nivel solo si avanzó
+  const nuevoNivel = Math.max(this.nivelActual, this.nivelSeleccionado);
+  const nuevaMedalla = this.calcularMedallaPorNivel(nuevoNivel);
+
+  // Solo guardar puntaje si al menos una respuesta fue correcta
+  const puntajeValido = this.puntajeJuego > 0 ? this.puntajeJuego : 0;
+  
+  this.http.post('http://localhost:3000/api/juego/guardar-puntaje', {
+    usuario_id: this.usuario_id,
+    puntaje: this.puntajeJuego,
+    nivel: nuevoNivel,
+    medallas: nuevaMedalla
+  }).subscribe({
+    next: (res: any) => {
+      this.mostrarModal = false;
+      this.dispararConfetti();
+      this.obtenerProgreso();
+      this.mostrarMensaje(res.mensaje || '✅ Progreso guardado', 'exito');
+    },
+    error: (err) => {
+      const msg = err?.error?.mensaje || '❌ Error inesperado al guardar';
+      this.mostrarMensaje(msg, 'error');
+    }
+  });
+}
+
+
+
+  dispararConfetti(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
+    }
+  }
+
+  esCorrecto(indice: number): boolean {
+  // ✅ Solo muestra verde si la respuesta es correcta y fue seleccionada a tiempo
+  return (
+    this.respuestaSeleccionada === indice &&
+    this.preguntas[this.preguntaActual].respuesta === indice &&
+    !this.bloquearPregunta
+  );
+}
+
+  esIncorrecto(indice: number): boolean {
+  // ❌ Marca como incorrecto si fue seleccionada pero es errónea, o se bloqueó
+  return (
+    this.respuestaSeleccionada === indice &&
+    this.preguntas[this.preguntaActual].respuesta !== indice
+  ) || this.bloquearPregunta;
+}
+
+
+  cerrarModal(): void {
+    this.mostrarModal = false;
+    clearInterval(this.timer);          // ✅ Detiene el temporizador
+    this.temporizadorActivo = false;    // ✅ Marca que ya no está activo
+    this.bloquearPregunta = true;       // ✅ Bloquea nuevas respuestas si aplica
+  }
+}
+

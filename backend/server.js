@@ -210,6 +210,30 @@ app.get('/api/perfil/:id', (req, res) => {
   });
 });
 
+// Obtener progreso del usuario desde la tabla proceso_juego
+app.get('/api/progreso/:id', (req, res) => {
+  const { id } = req.params;
+
+  const query = `
+    SELECT puntaje, nivel, medallas 
+    FROM proceso_juego 
+    WHERE usuario_id = ? LIMIT 1
+  `;
+
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('❌ Error al consultar progreso:', err.message);
+      return res.status(500).json({ mensaje: 'Error al consultar progreso', error: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ mensaje: 'Progreso no encontrado' });
+    }
+
+    res.status(200).json(results[0]);
+  });
+});
+
 
 // ✅ Middleware para verificar el token
 function verificarToken(req, res, next) {
@@ -250,37 +274,62 @@ app.get('/api/usuarios', (req, res) => {
 
 // a. script para el juego
 app.post('/api/juego/guardar-puntaje', (req, res) => {
-  const { usuario_id, puntaje } = req.body;
+  const { usuario_id, puntaje, nivel, medallas } = req.body;
 
-  if (!usuario_id || puntaje == null) {
-    return res.status(400).json({ mensaje: 'Datos incompletos' });
+  // Validación básica
+  if (!usuario_id || puntaje == null || !nivel || !medallas) {
+    return res.status(400).json({ mensaje: '⚠️ Datos incompletos' });
   }
 
   const getQuery = `SELECT * FROM progreso_juego WHERE usuario_id = ?`;
   connection.query(getQuery, [usuario_id], (err, result) => {
-    if (err) return res.status(500).json({ mensaje: 'Error al consultar progreso', error: err.message });
-
-    const nuevoNivel = puntaje >= 500 ? 3 : puntaje >= 300 ? 2 : 1;
-    let medallas = '';
-    if (puntaje >= 100) medallas += '🥉';
-    if (puntaje >= 300) medallas += '🥈';
-    if (puntaje >= 500) medallas += '🥇';
+    if (err) return res.status(500).json({ mensaje: '❌ Error al consultar progreso', error: err.message });
 
     if (result.length === 0) {
-      // Insertar nuevo
+      // 🔰 No existe: insertar nuevo progreso
       const insert = `INSERT INTO progreso_juego (usuario_id, puntaje, nivel, medallas) VALUES (?, ?, ?, ?)`;
-      connection.query(insert, [usuario_id, puntaje, nuevoNivel, medallas], (err2) => {
-        if (err2) return res.status(500).json({ mensaje: 'Error al insertar', error: err2.message });
-        return res.status(200).json({ mensaje: '✅ Progreso registrado correctamente (nuevo)' });
+      connection.query(insert, [usuario_id, puntaje, nivel, medallas], (err2) => {
+        if (err2) return res.status(500).json({ mensaje: '❌ Error al insertar', error: err2.message });
+        return res.status(200).json({ mensaje: '✅ ¡Muy bien! Estas empezando con el pie derecho.' });
       });
     } else {
-      // Actualizar si ya existe
-      const update = `UPDATE progreso_juego SET puntaje = puntaje + ?, nivel = ?, medallas = ? WHERE usuario_id = ?`;
-      connection.query(update, [puntaje, nuevoNivel, medallas, usuario_id], (err2) => {
-        if (err2) return res.status(500).json({ mensaje: 'Error al actualizar', error: err2.message });
-        return res.status(200).json({ mensaje: '✅ Progreso actualizado correctamente' });
+      // 🛠️ Ya existe: actualizar progreso acumulando puntaje
+      /*const update = `UPDATE progreso_juego SET puntaje = puntaje + ?, nivel = ?, medallas = ? WHERE usuario_id = ?`;
+      connection.query(update, [puntaje, nivel, medallas, usuario_id], (err2) => {
+        if (err2) return res.status(500).json({ mensaje: '❌ Error al actualizar', error: err2.message });
+        return res.status(200).json({ mensaje: '✅ Progreso actualizado correctamente' }); */
+        const progresoActual = result[0];
+
+        const nuevoNivel = nivel > progresoActual.nivel ? nivel : progresoActual.nivel;
+        const nuevaMedalla = nivel > progresoActual.nivel ? medallas : progresoActual.medallas;
+
+        const update = `UPDATE progreso_juego SET puntaje = puntaje + ?, nivel = ?, medallas = ? WHERE usuario_id = ?`;
+        connection.query(update, [puntaje, nuevoNivel, nuevaMedalla, usuario_id], (err2) => {
+          if (err2) return res.status(500).json({ mensaje: '❌ Error al actualizar', error: err2.message });
+          return res.status(200).json({ mensaje: '✅ Progreso actualizado correctamente' });
       });
     }
+  });
+});
+
+
+// ✅ Ruta para obtener el progreso actual de un usuario
+app.get('/api/progreso/:usuario_id', (req, res) => {
+  const { usuario_id } = req.params;
+
+  const query = 'SELECT * FROM progreso_juego WHERE usuario_id = ?';
+  connection.query(query, [usuario_id], (err, results) => {
+    if (err) {
+      console.error('❌ Error al consultar progreso:', err.message);
+      return res.status(500).json({ mensaje: 'Error al consultar progreso', error: err.message });
+    }
+
+    if (results.length === 0) {
+      // Si aún no tiene progreso, devolvemos datos base (nivel 0)
+      return res.status(200).json({ nivel: 0, puntaje: 0, medallas: '' });
+    }
+
+    res.status(200).json(results[0]);
   });
 });
 

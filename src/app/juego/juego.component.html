@@ -1,46 +1,93 @@
-<div class="contenedor-juego">
-  <h2 class="titulo-juego">♻️ Clasifica Bien</h2>
-
-  <div class="puntaje-panel">
-    <p><strong>Puntaje:</strong> {{ puntaje }}</p>
+<div class="juegos-container">
+  <h2>🌱 Mapa de Niveles - Juego EcoRecicla</h2>
+  <p>Puntaje actual: {{ puntaje }} | Nivel alcanzado: {{ nivelActual }} | Medallas: {{ medallas }}</p>
+  <div class="medalla-info">
+  🏅 Medalla actual: <strong>{{ medallas }}</strong>
   </div>
 
-  <div class="zona-juego">
-    <div class="contenedor-residuos">
-      <h3>🧺 Selecciona un residuo</h3>
-      <div
-        class="residuo"
-        *ngFor="let residuo of residuos"
-        [class.seleccionado]="residuo === residuoSeleccionado"
-        [draggable]="!esMovil"
-        (dragstart)="iniciarArrastre($event, residuo)"
-        (click)="seleccionarResiduo(residuo)"
-      >
-        <img [src]="residuo.imagen" [alt]="residuo.nombre" />
-        <p>{{ residuo.nombre }}</p>
-      </div>
-    </div>
-
-    <div class="contenedor-tachos">
-      <h3>🚮 Elige el tacho correcto</h3>
-      <div
-        class="tacho"
-        *ngFor="let tacho of tachos"
-        (dragover)="permitirSoltar($event)"
-        (drop)="soltar($event, tacho)"
-        (click)="soltarTactil(tacho)"
-      >
-        <img [src]="'assets/tachos/' + tacho + '.png'" [alt]="tacho" />
-        <p>{{ tacho | titlecase }}</p>
-      </div>
+  <div class="niveles-mapa">
+    <div *ngFor="let nivel of niveles" class="nivel"
+         [class.desbloqueado]="nivel <= nivelActual + 1"
+         [class.completado]="nivel <= nivelActual"
+         (click)="jugarNivel(nivel)">
+      <span>Nivel {{ nivel }}</span>
+      <div *ngIf="nivel <= nivelActual">✅</div>
+      <div *ngIf="nivel > nivelActual">🔒</div>
     </div>
   </div>
 
-  <div class="mensaje-panel" *ngIf="mensaje">
-    <p [ngClass]="{ 'correcto': mensaje.startsWith('✅'), 'incorrecto': mensaje.startsWith('❌') }">
-      {{ mensaje }}
-    </p>
-  </div>
+  <!-- Modal del minijuego -->
+  <div *ngIf="mostrarModal" class="modal-overlay">
+    <div class="modal-contenido">
+      <h2>Nivel {{ nivelSeleccionado }}</h2>
 
-  <button class="btn-reiniciar" (click)="reiniciarJuego()">🔄 Reiniciar Juego</button>
+      <!-- Juego tipo quiz -->
+      <div class="quiz" *ngIf="tipoJuego === 'quiz' && preguntas.length">
+        <div class="temporizador">
+          ⏱️ Tiempo: {{ tiempoRestante }} segundos
+        </div>
+
+        <h3>{{ preguntas[preguntaActual].pregunta }}</h3>
+        <ul>
+          <li
+            *ngFor="let opcion of preguntas[preguntaActual]?.opciones; let i = index"
+            (click)="seleccionarOpcion(i)"
+            [ngClass]="{
+              'correcto': esCorrecto(i),
+              'incorrecto': esIncorrecto(i),
+              'bloqueado': bloquearPregunta && respuestaSeleccionada === null
+            }"
+          >
+            <span class="opcion-texto">{{ opcion }}</span>
+            <span *ngIf="esCorrecto(i)">✅</span>
+            <span *ngIf="esIncorrecto(i)">❌</span>
+          </li>
+
+        </ul>
+      </div>
+
+      <!-- Juego tipo arrastrar -->
+      <div *ngIf="tipoJuego === 'arrastrar'" class="juego-arrastrar">
+        <div class="temporizador">
+          ⏱️ Tiempo: {{ tiempoRestante }} segundos
+        </div>
+        <h3>Arrastra cada residuo al contenedor correcto</h3>
+
+        <!-- Zona de residuos -->
+        <div class="zona-residuos">
+          <img
+            *ngFor="let residuo of residuos"
+            [src]="'assets/residuos/' + residuo.imagen"
+            [alt]="residuo.nombre"
+            class="residuo"
+            draggable="true"
+            (dragstart)="dragStart($event, residuo.tipo)"
+          />
+        </div>
+
+        <!-- Zona de contenedores -->
+        <div class="zona-contenedores">
+          <div
+            class="contenedor"
+            *ngFor="let contenedor of contenedores"
+            [attr.data-tipo]="contenedor.tipo"
+            (dragover)="allowDrop($event)"
+            (drop)="drop($event, contenedor.tipo)"
+          >
+            <img [src]="'assets/contenedores/' + contenedor.imagen" [alt]="contenedor.tipo" />
+          </div>
+        </div>
+      </div>
+
+      <button (click)="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+
+<div *ngIf="mensajeVisible" class="modal-overlay">
+  <div class="modal-contenido" [ngClass]="mensajeTipo">
+    <button class="cerrar" (click)="mensajeVisible = false">&times;</button>
+    <p>{{ mensajeTexto }}</p>
+  </div>
 </div>

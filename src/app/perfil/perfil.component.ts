@@ -1,5 +1,4 @@
 // perfil.component.ts
-
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -13,6 +12,11 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./perfil.component.css']
 })
 export class PerfilComponent implements OnInit {
+  // ✅ Añadido para diferenciar entorno (local o producción)
+  private isBrowser: boolean = false;
+  private apiUrl: string = '';
+
+  // 👤 Datos personales
   nombreUsuario = '';
   apellidoUsuario = '';
   correoUsuario = '';
@@ -22,85 +26,70 @@ export class PerfilComponent implements OnInit {
   fechaRegistro = '';
   tipoUsuario = '';
 
+  // 🧑‍🤝‍🧑 Usuarios y filtros
   usuarios: any[] = [];
   usuariosFiltrados: any[] = [];
-  cursosCertificados: string[] = [];
-
-  puntaje = 0;
-  nivel = 1;
-  medallas = '';
-  cursosDisponibles: string[] = [];
-
-  mostrarTablaUsuarios = false;
-  mostrarCursos = false;
-
   filtroNombre = '';
   cantidadFilas = 10;
 
-  // ➕ Cursos desde la BD
+  // 🎓 Cursos
+  cursosCertificados: string[] = [];
+  cursosDisponibles: string[] = [];
   cursos: any[] = [];
   cursosFiltrados: any[] = [];
 
-  // ➕ Datos del nuevo curso
+  // 🧾 Nuevo curso
   nuevoCurso = {
     nombre: '',
     duracion: '',
     horario: '',
     precio: null as number | null,
-    //precio: 0,
     modalidad: '',
     extra: '',
     estado: 'activo'
   };
 
+  // 🎮 Progreso
+  puntaje = 0;
+  nivel = 1;
+  medallas = '';
+
+  // 👁️ Flags UI
+  mostrarTablaUsuarios = false;
   mostrarTablaCursos = false;
+  mostrarCursos = false;
 
-  private isBrowser: boolean;
-
-  private apiUrl = 'https://comunidadvapps.com/api.php'; // si usas el backend PHP
-  //private apiUrl = 'http://localhost:3000/api'; // si usas un backend Node.js (server.js)
+  // 💬 Modal
+  mensajeModal = '';
+  mostrarModal = false;
 
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {
-    this.isBrowser = isPlatformBrowser(platformId);
+  ) {}
+
+  isLocalhost(): boolean {
+    return typeof window !== 'undefined' && window.location.hostname === 'localhost';
   }
 
-  // ➕ Para mostrar/ocultar los botones
-  esAdmin(): boolean {
-    return this.tipoUsuario === 'administrador';
+  mostrarMensaje(mensaje: string) {
+    this.mensajeModal = mensaje;
+    this.mostrarModal = true;
   }
 
-  esDocente(): boolean {
-    return this.tipoUsuario === 'docente';
+  cerrarModal() {
+    this.mostrarModal = false;
   }
-
-  puedeVerUsuarios(): boolean {
-    return this.tipoUsuario === 'administrador';
-  }
-
-  puedeVerCursos(): boolean {
-    return this.tipoUsuario === 'administrador' || this.tipoUsuario === 'docente';
-  }
-
-  // ➕ Modal
-mensajeModal = '';
-mostrarModal = false;
-
-mostrarMensaje(mensaje: string) {
-  this.mensajeModal = mensaje;
-  this.mostrarModal = true;
-}
-
-cerrarModal() {
-  this.mostrarModal = false;
-}
-
 
   ngOnInit(): void {
-    
+    this.isBrowser = isPlatformBrowser(this.platformId);
+
     if (!this.isBrowser) return;
+
+    // ✅ Inicializar apiUrl aquí (cuando ya se puede usar this)
+    this.apiUrl = this.isLocalhost()
+      ? 'http://localhost:3000/api'
+      : 'https://comunidadvapps.com/api.php';
 
     const usuario = sessionStorage.getItem('usuario');
     if (!usuario) return;
@@ -110,48 +99,55 @@ cerrarModal() {
     this.tipoUsuario = userData.tipo_usuario || 'estandar';
 
     // 🔍 Obtener perfil
-    this.http.get<any>(`${this.apiUrl}?accion=perfil&id=${userId}`).subscribe({
-    //this.http.get<any>(`${this.apiUrl}/perfil/${userId}`).subscribe({
-      next: perfil => {
-        this.nombreUsuario = perfil.nombre ?? '';
-        this.apellidoUsuario = perfil.apellido ?? '';
-        this.correoUsuario = perfil.correo ?? '';
-        this.tipoDocumento = perfil.tipo_documento ?? '';
-        this.documento = perfil.documento ?? '';
-        this.fechaRegistro = perfil.fecha_registro ?? '';
-        this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
-        this.edad = this.calcularEdad(perfil.fecha_nacimiento);
+    const perfilUrl = this.isLocalhost()
+  ? `${this.apiUrl}/perfil/${userId}` // Node.js local
+  : `${this.apiUrl}?accion=perfil&id=${userId}`; // PHP en producción
 
-         // 👇 Si es usuario estándar, carga los cursos al iniciar
-        if (this.tipoUsuario === 'estandar') {
-          this.listarCursos();
-        }
-      },
-      error: err => {
-        console.error('❌ Error al cargar perfil:', err);
-      }
-    });
+this.http.get<any>(perfilUrl).subscribe({
+  next: perfil => {
+    this.nombreUsuario = perfil.nombre ?? '';
+    this.apellidoUsuario = perfil.apellido ?? '';
+    this.correoUsuario = perfil.correo ?? '';
+    this.tipoDocumento = perfil.tipo_documento ?? '';
+    this.documento = perfil.documento ?? '';
+    this.fechaRegistro = perfil.fecha_registro ?? '';
+    this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
+    this.edad = this.calcularEdad(perfil.fecha_nacimiento);
+
+    // 👇 Si es usuario estándar, carga los cursos al iniciar
+    if (this.tipoUsuario === 'estandar') {
+      this.listarCursos();
+    }
+  },
+  error: err => {
+    console.error('❌ Error al cargar perfil:', err);
+  }
+});
+
 
     // 🎮 Obtener progreso
-    //this.http.get<any>(`${this.apiUrl}?accion=progreso&id=${userId}`).subscribe({
-    this.http.get<any>(`${this.apiUrl}?accion=progreso&id=${userId}`).subscribe({
-      next: progreso => {
-        this.puntaje = progreso.puntaje ?? 0;
-        this.nivel = progreso.nivel ?? 1;
-        this.medallas = progreso.medallas ?? '';
-        this.cargarCursos();
-      },
-      error: () => {
-        this.puntaje = 0;
-        this.nivel = 1;
-        this.medallas = '';
-      }
-    });
+const progresoUrl = this.isLocalhost()
+  ? `${this.apiUrl}/progreso/${userId}`        // Node.js
+  : `${this.apiUrl}?accion=progreso&id=${userId}`; // PHP
+
+this.http.get<any>(progresoUrl).subscribe({
+  next: progreso => {
+    this.puntaje = progreso.puntaje ?? 0;
+    this.nivel = progreso.nivel ?? 1;
+    this.medallas = progreso.medallas ?? '';
+    this.cargarCursos();
+  },
+  error: () => {
+    this.puntaje = 0;
+    this.nivel = 1;
+    this.medallas = '';
+  }
+});
+
   }
 
   calcularEdad(fechaNacimiento: string): string {
     if (!fechaNacimiento) return '';
-
     const nacimiento = new Date(fechaNacimiento);
     const hoy = new Date();
 
@@ -181,7 +177,6 @@ cerrarModal() {
 
   verUsuarios() {
     this.http.get<any[]>(`${this.apiUrl}?accion=listar-usuarios`).subscribe({
-    //this.http.get<any[]>(`${this.apiUrl}/usuarios`).subscribe({
       next: datos => {
         this.usuarios = datos;
         this.filtrarUsuarios();
@@ -192,57 +187,54 @@ cerrarModal() {
     });
   }
 
-  verCursosCertificados() {
-    this.cursosCertificados = [
-      'Certificado en Reciclaje Básico ♻️',
-      'Certificado en Gestión de Residuos 🗑️',
-      'Certificación en Educación Ambiental 🌱'
-    ];
-    this.mostrarCursos = true;
-    this.mostrarTablaUsuarios = false;
+  listarCursos() {
+    this.http.get<any[]>(`${this.apiUrl}?accion=listar-cursos`).subscribe({
+      next: datos => {
+        this.cursos = datos;
+        this.filtrarCursos();
+        if (this.tipoUsuario !== 'estandar') {
+          this.mostrarTablaCursos = true;
+          this.mostrarTablaUsuarios = false;
+        }
+      },
+      error: err => console.error('❌ Error al listar cursos:', err)
+    });
   }
 
-    // ➕ Listar cursos
-  listarCursos() {
-  this.http.get<any[]>(`${this.apiUrl}?accion=listar-cursos`).subscribe({
-  //this.http.get<any[]>(`${this.apiUrl}/cursos`).subscribe({
-    next: datos => {
-      this.cursos = datos;
-      this.filtrarCursos();
-
-      if (this.tipoUsuario !== 'estandar') {
-        this.mostrarTablaCursos = true;
-        this.mostrarTablaUsuarios = false;
-      }
-    },
-    error: err => console.error('❌ Error al listar cursos:', err)
-  });
-}
-
-  // ➕ Registrar nuevo curso
   registrarCurso() {
-  // ➤ API PHP
-  this.http.post<any>(`${this.apiUrl}?accion=registrar-curso`, this.nuevoCurso).subscribe({
-  // ➤ API Node.js
-  // this.http.post<any>(`${this.apiUrl}/cursos`, this.nuevoCurso).subscribe({
-    next: respuesta => {
-      //alert(respuesta.mensaje || '✅ Curso registrado con éxito');
-      this.mostrarMensaje(respuesta.mensaje || '✅ Curso registrado con éxito');
-      this.listarCursos();
-      this.nuevoCurso = { nombre: '', duracion: '', horario: '', precio: null, modalidad: '', extra: '', estado: 'activo' };
-    },
-    //error: err => console.error('❌ Error al registrar curso:', err)
-    //error: err => this.mostrarMensaje('❌ Error al registrar curso: ' + (err.error?.error || 'Error desconocido'))
-    error: err => {
-      // ➤ Mostrar el mensaje que viene del backend (si existe), si no, mostrar un error genérico
-      const mensajeError = err.error?.error || '❌ Error al registrar curso';
-      this.mostrarMensaje(mensajeError);
+    this.http.post<any>(`${this.apiUrl}?accion=registrar-curso`, this.nuevoCurso).subscribe({
+      next: respuesta => {
+        this.mostrarMensaje(respuesta.mensaje || '✅ Curso registrado con éxito');
+        this.listarCursos();
+        this.nuevoCurso = {
+          nombre: '', duracion: '', horario: '', precio: null,
+          modalidad: '', extra: '', estado: 'activo'
+        };
+      },
+      error: err => {
+        const mensajeError = err.error?.error || '❌ Error al registrar curso';
+        this.mostrarMensaje(mensajeError);
+      }
+    });
+  }
+
+  canjearCurso(curso: any) {
+    if (this.puntaje < 100) {
+      this.mostrarMensaje('❌ No tienes puntos suficientes para canjear este curso');
+      return;
     }
-  });
-}
 
+    this.mostrarMensaje(`🎁 Has canjeado el curso: ${curso.nombre}`);
+    this.puntaje -= 100;
+    this.cargarCursos();
+  }
 
-  // ➕ Filtrar cursos
+  validarPrecio() {
+    if (this.nuevoCurso.precio !== null && this.nuevoCurso.precio < 1) {
+      this.nuevoCurso.precio = null;
+    }
+  }
+
   filtrarCursos() {
     const filtro = this.filtroNombre.trim().toLowerCase();
     let filtrados = this.cursos;
@@ -268,30 +260,20 @@ cerrarModal() {
     this.usuariosFiltrados = filtrados.slice(0, this.cantidadFilas);
   }
 
-  canjearCurso(curso: any) {
-  if (this.puntaje < 100) {
-    //alert('❌ No tienes puntos suficientes para canjear este curso');
-    this.mostrarMensaje('❌ No tienes puntos suficientes para canjear este curso');
-    return;
+  // Roles
+  esAdmin(): boolean {
+    return this.tipoUsuario === 'administrador';
   }
 
-  // Aquí puedes hacer la lógica para descontar puntos o registrar el canje
-  //alert(`🎁 Has canjeado el curso: ${curso.nombre}`);
-  this.mostrarMensaje(`🎁 Has canjeado el curso: ${curso.nombre}`);
-
-  // Ejemplo: restar puntos por cada curso
-  this.puntaje -= 100;
-  this.cargarCursos();
-}
-
-validarPrecio() {
-  if (this.nuevoCurso.precio === null || this.nuevoCurso.precio === undefined) return;
-
-  // ✅ Si es menor a 1, lo resetea a vacío
-  if (this.nuevoCurso.precio < 1) {
-    this.nuevoCurso.precio = null;
+  esDocente(): boolean {
+    return this.tipoUsuario === 'docente';
   }
-}
 
+  puedeVerUsuarios(): boolean {
+    return this.tipoUsuario === 'administrador';
+  }
 
+  puedeVerCursos(): boolean {
+    return this.tipoUsuario === 'administrador' || this.tipoUsuario === 'docente';
+  }
 }
