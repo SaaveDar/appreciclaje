@@ -283,18 +283,28 @@ export class JuegoComponent implements OnInit {
     }
   }
 
+  getApiProgresoUrl(): string {
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  return isLocal
+    ? 'http://localhost:3000/api/progreso/'
+    : 'https://comunidadvapps.com/api.php?accion=progreso&usuario_id=';
+}
+
+
   obtenerProgreso(): void {
-    this.http.get<any>(this.getProgresoUrl()).subscribe({
-      next: data => {
-        this.nivelActual = data.nivel;
-        this.puntaje = data.puntaje;
-        this.medallas = data.medallas;
-      },
-      error: err => {
-        this.mostrarMensaje('❌ Error al cargar tu progreso', 'error');
-      }
-    });
-  }
+  const apiUrl = this.getApiProgresoUrl(); // 👈 nueva función
+  this.http.get<any>(`${apiUrl}${this.usuario_id}`).subscribe({
+    next: data => {
+      this.nivelActual = data.nivel;
+      this.puntaje = data.puntaje;
+      this.medallas = data.medallas;
+    },
+    error: err => {
+      this.mostrarMensaje('❌ Error al cargar tu progreso', 'error');
+    }
+  });
+}
+
 
   guardarPuntaje(): void {
     const nuevoNivel = Math.max(this.nivelActual, this.nivelSeleccionado);
