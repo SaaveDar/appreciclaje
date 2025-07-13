@@ -448,11 +448,14 @@ export class JuegoComponent implements OnInit {
     const nuevaMedalla = this.calcularMedallaPorNivel(nuevoNivel);
     const puntajeValido = this.puntajeJuego > 0 ? this.puntajeJuego : 0;
 
-    this.http.post(this.getApiUrl(), {
-      usuario_id: this.usuario_id,
-      puntaje: this.puntajeJuego,
-      nivel: nuevoNivel,
-      medallas: nuevaMedalla
+    const body = new URLSearchParams();
+    body.set('usuario_id', this.usuario_id.toString());
+    body.set('puntaje', this.puntajeJuego.toString());
+    body.set('nivel', nuevoNivel.toString());
+    body.set('medallas', nuevaMedalla);
+
+    this.http.post(this.getApiUrl(), body.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).subscribe({
       next: (res: any) => {
         this.mostrarModal = false;
