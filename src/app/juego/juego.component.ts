@@ -41,9 +41,10 @@ export class JuegoComponent implements OnInit {
   mensajeVisible = false;
   mensajeTexto = '';
   mensajeTipo: 'exito' | 'error' | 'advertencia' = 'exito';
-  respuestaIncorrecta = false;
-  todasCorrectas = true;
-  arrastreCorrecto: boolean = true;
+  respuestaIncorrecta = false; // Indica si la respuesta fue incorrecta o no hubo respuesta
+  todasCorrectas = true; // asume que el usuario es perfecto... hasta que falle
+  arrastreCorrecto: boolean = true; // ✅ Asume todo correcto, se anula si falla 1
+
 
   usuario_id = 0;
   nivelActual = 0;
@@ -247,12 +248,43 @@ export class JuegoComponent implements OnInit {
 
   };
 
-
-  constructor(
+    constructor(
     private http: HttpClient,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
+
+  iniciarTemporizador(): void {
+  clearInterval(this.timer);
+  this.tiempoRestante = 20;
+  this.temporizadorActivo = true;
+  this.bloquearPregunta = false;
+
+  this.timer = setInterval(() => {
+    this.tiempoRestante--;
+
+    if (this.tiempoRestante <= 0) {
+      clearInterval(this.timer);
+      this.temporizadorActivo = false;
+      this.bloquearPregunta = true;
+
+      this.todasCorrectas = false; // ⛔ No respondió → error
+
+      setTimeout(() => {
+        this.preguntaActual++;
+        this.respuestaSeleccionada = null;
+
+        if (this.preguntaActual >= this.preguntas.length) {
+          this.finalizarQuiz();
+        } else {
+          this.iniciarTemporizador();
+        }
+      }, 800);
+    }
+  }, 1000);
+}
+
+
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -267,18 +299,33 @@ export class JuegoComponent implements OnInit {
     }
   }
 
-  obtenerProgreso(): void {
-    this.http.get<any>(`http://localhost:3000/api/progreso/${this.usuario_id}`).subscribe({
-      next: data => {
-        this.nivelActual = data.nivel;
-        this.puntaje = data.puntaje;
-        this.medallas = data.medallas;
-      },
-      error: err => {
-        this.mostrarMensaje('❌ Error al cargar tu progreso', 'error');
-      }
-    });
-  }
+  getApiUrl(): string {
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1'
+    ? 'http://localhost:3000/api/juego/guardar-puntaje'
+    : 'https://comunidadvapps.com/api.php?accion=guardar-puntaje';
+}
+
+getProgresoUrl(): string {
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1'
+    ? `http://localhost:3000/api/progreso/${this.usuario_id}`
+    : `https://comunidadvapps.com/api.php?accion=progreso&id=${this.usuario_id}`;
+}
+
+obtenerProgreso(): void {
+  this.http.get<any>(this.getProgresoUrl()).subscribe({
+    next: data => {
+      this.nivelActual = data.nivel;
+      this.puntaje = data.puntaje;
+      this.medallas = data.medallas;
+    },
+    error: err => {
+      this.mostrarMensaje('❌ Error al cargar tu progreso', 'error');
+    }
+  });
+}
+
 
   mostrarMensaje(texto: string, tipo: 'exito' | 'error' | 'advertencia' = 'exito'): void {
     this.mensajeTexto = texto;
@@ -290,136 +337,119 @@ export class JuegoComponent implements OnInit {
   }
 
   jugarNivel(nivel: number): void {
-    if (nivel > this.nivelActual + 1) {
-      this.mostrarMensaje('⚠️ Debes completar los niveles anteriores primero', 'advertencia');
-      return;
-    }
-
-    const config = this.nivelesConfig[nivel];
-    if (!config) {
-      this.mostrarMensaje('⚠️ Nivel no disponible aún', 'advertencia');
-      return;
-    }
-
-    this.nivelSeleccionado = nivel;
-    this.tipoJuego = config.tipo;
-    this.puntajeJuego = 0;
-    this.preguntaActual = 0;
-    this.todasCorrectas = true;
-    this.arrastreCorrecto = true;
-    this.respuestaSeleccionada = null;
-
-    if (config.tipo === 'quiz') {
-      this.preguntas = config.preguntas || [];
-      this.iniciarTemporizador();
-    } else if (config.tipo === 'arrastrar') {
-      this.residuos = [...(config.residuos || [])];
-      this.contenedores = config.contenedores || [];
-      this.iniciarTemporizador();
-    }
-
-    this.mostrarModal = true;
+  if (nivel > this.nivelActual + 1) {
+    this.mostrarMensaje('⚠️ Debes completar los niveles anteriores primero', 'advertencia');
+    return;
   }
 
-  iniciarTemporizador(): void {
-    clearInterval(this.timer);
-    this.tiempoRestante = 20;
-    this.temporizadorActivo = true;
-    this.bloquearPregunta = false;
-
-    this.timer = setInterval(() => {
-      this.tiempoRestante--;
-      if (this.tiempoRestante <= 0) {
-        clearInterval(this.timer);
-        this.temporizadorActivo = false;
-        this.bloquearPregunta = true;
-        this.todasCorrectas = false;
-        setTimeout(() => {
-          this.preguntaActual++;
-          this.respuestaSeleccionada = null;
-          if (this.preguntaActual >= this.preguntas.length) {
-            this.finalizarQuiz();
-          } else {
-            this.iniciarTemporizador();
-          }
-        }, 800);
-      }
-    }, 1000);
+  const config = this.nivelesConfig[nivel];
+  if (!config) {
+    this.mostrarMensaje('⚠️ Nivel no disponible aún', 'advertencia');
+    return;
   }
+
+  this.nivelSeleccionado = nivel;
+  this.tipoJuego = config.tipo;
+  this.puntajeJuego = 0;
+  this.preguntaActual = 0;
+  this.todasCorrectas = true;
+  this.arrastreCorrecto = true; // 🔄 Reiniciar para cada nivel
+  this.respuestaSeleccionada = null;
+
+  if (config.tipo === 'quiz') {
+    this.preguntas = config.preguntas || [];
+    this.iniciarTemporizador();
+  } else if (config.tipo === 'arrastrar') {
+    this.residuos = [...(config.residuos || [])];
+    this.contenedores = config.contenedores || [];
+    this.iniciarTemporizador();
+  }
+
+  this.mostrarModal = true;
+}
+
+
 
   seleccionarOpcion(indice: number): void {
-    if (this.respuestaSeleccionada !== null || this.bloquearPregunta) return;
+  if (this.respuestaSeleccionada !== null || this.bloquearPregunta) return;
 
-    clearInterval(this.timer);
-    this.temporizadorActivo = false;
-    this.respuestaSeleccionada = indice;
+  clearInterval(this.timer);
+  this.temporizadorActivo = false;
+  this.respuestaSeleccionada = indice;
 
-    const correcta = this.preguntas[this.preguntaActual].respuesta;
-    const esCorrecta = indice === correcta;
+  const correcta = this.preguntas[this.preguntaActual].respuesta;
+  const esCorrecta = indice === correcta;
 
-    if (!esCorrecta) {
-      this.todasCorrectas = false;
-    } else {
-      this.puntajeJuego += 100;
-    }
-
-    setTimeout(() => {
-      this.preguntaActual++;
-      this.respuestaSeleccionada = null;
-      if (this.preguntaActual >= this.preguntas.length) {
-        this.finalizarQuiz();
-      } else {
-        this.iniciarTemporizador();
-      }
-    }, 1000);
+  if (!esCorrecta) {
+    this.todasCorrectas = false; // ❌ Hay al menos un error
+  } else {
+    this.puntajeJuego += 100;
   }
 
-  finalizarQuiz(): void {
-    if (this.todasCorrectas && this.puntajeJuego === this.preguntas.length * 100) {
-      this.mostrarMensaje('🎉 ¡Felicitaciones! Completaste el nivel correctamente 🎯', 'exito');
-      this.guardarPuntaje();
-    } else {
-      this.mostrarMensaje('❌ Fallaste alguna pregunta o no respondiste a tiempo', 'error');
-      this.mostrarModal = false;
-      this.todasCorrectas = true;
-    }
-  }
+  setTimeout(() => {
+    this.preguntaActual++;
+    this.respuestaSeleccionada = null;
 
-  drop(event: DragEvent, tipoContenedor: string): void {
-    event.preventDefault();
-    if (!this.draggedTipo || this.bloquearPregunta) return;
-
-    clearInterval(this.timer);
-    this.temporizadorActivo = false;
-
-    if (this.draggedTipo === tipoContenedor) {
-      this.puntajeJuego += 100;
-      this.mostrarMensaje('✅ ¡Correcto!', 'exito');
-    } else {
-      this.arrastreCorrecto = false;
-      this.mostrarMensaje('❌ Incorrecto', 'error');
-    }
-
-    this.residuos = this.residuos.filter(r => r.tipo !== this.draggedTipo);
-    this.draggedTipo = '';
-
-    if (this.residuos.length === 0) {
-      this.finalizarArrastrar();
+    if (this.preguntaActual >= this.preguntas.length) {
+      this.finalizarQuiz(); // ⬅️ Aquí se decide si gana o no
     } else {
       this.iniciarTemporizador();
     }
+  }, 1000);
+}
+
+
+
+  finalizarQuiz(): void {
+  if (this.todasCorrectas && this.puntajeJuego === this.preguntas.length * 100) {
+    this.mostrarMensaje('🎉 ¡Felicitaciones! Completaste el nivel correctamente 🎯', 'exito');
+    this.guardarPuntaje();
+  } else {
+    this.mostrarMensaje('❌ Fallaste alguna pregunta o no respondiste a tiempo', 'error');
+    this.mostrarModal = false;
+    this.todasCorrectas = true; // Reiniciar para siguiente intento
+  }
+}
+
+
+
+  drop(event: DragEvent, tipoContenedor: string): void {
+  event.preventDefault();
+
+  if (!this.draggedTipo || this.bloquearPregunta) return;
+
+  clearInterval(this.timer);
+  this.temporizadorActivo = false;
+
+  if (this.draggedTipo === tipoContenedor) {
+    this.puntajeJuego += 100;
+    this.mostrarMensaje('✅ ¡Correcto!', 'exito');
+  } else {
+    this.arrastreCorrecto = false; // ❌ Falló al arrastrar
+    this.mostrarMensaje('❌ Incorrecto', 'error');
   }
 
-  finalizarArrastrar(): void {
-    if (this.arrastreCorrecto && this.puntajeJuego > 0) {
-      this.mostrarMensaje('🎉 ¡Excelente! Completaste el nivel correctamente 🎯', 'exito');
-      this.guardarPuntaje();
-    } else {
-      this.mostrarMensaje('❌ Fallaste al arrastrar algún residuo. Intenta de nuevo', 'error');
-      this.mostrarModal = false;
-      this.arrastreCorrecto = true;
-    }
+  this.residuos = this.residuos.filter(r => r.tipo !== this.draggedTipo);
+  this.draggedTipo = '';
+
+  if (this.residuos.length === 0) {
+    this.finalizarArrastrar(); // ✅ cuando ya no quedan residuos
+  } else {
+    this.iniciarTemporizador(); // ⏱️ para el siguiente
   }
+}
+
+finalizarArrastrar(): void {
+  if (this.arrastreCorrecto && this.puntajeJuego > 0) {
+    this.mostrarMensaje('🎉 ¡Excelente! Completaste el nivel correctamente 🎯', 'exito');
+    this.guardarPuntaje();
+  } else {
+    this.mostrarMensaje('❌ Fallaste al arrastrar algún residuo. Intenta de nuevo', 'error');
+    this.mostrarModal = false;
+    this.arrastreCorrecto = true; // Reinicia para el siguiente intento
+  }
+}
+
 
   dragStart(event: DragEvent, tipo: string): void {
     this.draggedTipo = tipo;
@@ -430,45 +460,40 @@ export class JuegoComponent implements OnInit {
   }
 
   calcularMedallaPorNivel(nivel: number): string {
-    if (nivel >= 9) return '🥇 Oro';
-    if (nivel >= 6) return '🥈 Plata';
-    if (nivel >= 3) return '🥉 Bronce';
-    return 'Sin medalla';
-  }
-
-  getApiUrl(): string {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    return isLocal
-      ? 'http://localhost:3000/api/juego/guardar-puntaje'
-      : 'https://comunidadvapps.com/api.php?accion=guardar-puntaje';
-  }
+  if (nivel >= 9) return '🥇 Oro';
+  if (nivel >= 6) return '🥈 Plata';
+  if (nivel >= 3) return '🥉 Bronce';
+  return 'Sin medalla';
+}
 
   guardarPuntaje(): void {
-    const nuevoNivel = Math.max(this.nivelActual, this.nivelSeleccionado);
-    const nuevaMedalla = this.calcularMedallaPorNivel(nuevoNivel);
-    const puntajeValido = this.puntajeJuego > 0 ? this.puntajeJuego : 0;
+  const nuevoNivel = Math.max(this.nivelActual, this.nivelSeleccionado);
+  const nuevaMedalla = this.calcularMedallaPorNivel(nuevoNivel);
 
-    const body = new URLSearchParams();
-    body.set('usuario_id', this.usuario_id.toString());
-    body.set('puntaje', this.puntajeJuego.toString());
-    body.set('nivel', nuevoNivel.toString());
-    body.set('medallas', nuevaMedalla);
+  const body = new URLSearchParams();
+  body.set('usuario_id', this.usuario_id.toString());
+  body.set('puntaje', this.puntajeJuego.toString());
+  body.set('nivel', nuevoNivel.toString());
+  body.set('medallas', nuevaMedalla);
 
-    this.http.post(this.getApiUrl(), body.toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    }).subscribe({
-      next: (res: any) => {
-        this.mostrarModal = false;
-        this.dispararConfetti();
-        this.obtenerProgreso();
-        this.mostrarMensaje(res.mensaje || '✅ Progreso guardado', 'exito');
-      },
-      error: (err) => {
-        const msg = err?.error?.mensaje || '❌ Error inesperado al guardar';
-        this.mostrarMensaje(msg, 'error');
-      }
-    });
-  }
+  this.http.post(this.getApiUrl(), body.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).subscribe({
+    next: (res: any) => {
+      this.mostrarModal = false;
+      this.dispararConfetti();
+      this.obtenerProgreso();
+      this.mostrarMensaje(res.mensaje || '✅ Progreso guardado', 'exito');
+    },
+    error: (err) => {
+      const msg = err?.error?.mensaje || '❌ Error inesperado al guardar';
+      this.mostrarMensaje(msg, 'error');
+    }
+  });
+}
+
+
+
 
   dispararConfetti(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -477,24 +502,28 @@ export class JuegoComponent implements OnInit {
   }
 
   esCorrecto(indice: number): boolean {
-    return (
-      this.respuestaSeleccionada === indice &&
-      this.preguntas[this.preguntaActual].respuesta === indice &&
-      !this.bloquearPregunta
-    );
-  }
+  // ✅ Solo muestra verde si la respuesta es correcta y fue seleccionada a tiempo
+  return (
+    this.respuestaSeleccionada === indice &&
+    this.preguntas[this.preguntaActual].respuesta === indice &&
+    !this.bloquearPregunta
+  );
+}
 
   esIncorrecto(indice: number): boolean {
-    return (
-      this.respuestaSeleccionada === indice &&
-      this.preguntas[this.preguntaActual].respuesta !== indice
-    ) || this.bloquearPregunta;
-  }
+  // ❌ Marca como incorrecto si fue seleccionada pero es errónea, o se bloqueó
+  return (
+    this.respuestaSeleccionada === indice &&
+    this.preguntas[this.preguntaActual].respuesta !== indice
+  ) || this.bloquearPregunta;
+}
+
 
   cerrarModal(): void {
     this.mostrarModal = false;
-    clearInterval(this.timer);
-    this.temporizadorActivo = false;
-    this.bloquearPregunta = true;
+    clearInterval(this.timer);          // ✅ Detiene el temporizador
+    this.temporizadorActivo = false;    // ✅ Marca que ya no está activo
+    this.bloquearPregunta = true;       // ✅ Bloquea nuevas respuestas si aplica
   }
 }
+
