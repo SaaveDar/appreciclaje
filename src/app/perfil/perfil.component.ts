@@ -21,6 +21,8 @@ export class PerfilComponent implements OnInit {
   documento = '';
   fechaRegistro = '';
   tipoUsuario = '';
+  mostrarTablaCanje = false;
+
 
   usuarios: any[] = [];
   usuariosFiltrados: any[] = [];
@@ -126,6 +128,16 @@ export class PerfilComponent implements OnInit {
       }
     });
   }
+
+  calcularPuntosRequeridos(precio: number): number {
+  if (precio >= 200) return 800;
+  if (precio >= 150) return 600;
+  if (precio >= 100) return 400;
+  if (precio >= 50) return 200;
+  if (precio >= 25) return 100;
+  if (precio >= 12.5) return 50;
+  return 0; // Por defecto, si es menor a 12.5
+}
 
   calcularEdad(fechaNacimiento: string): string {
     if (!fechaNacimiento) return '';
@@ -266,15 +278,17 @@ verCursosCertificados() {
   }
 
   canjearCurso(curso: any) {
-    if (this.puntaje < 100) {
-      this.mostrarMensaje('❌ No tienes puntos suficientes para canjear este curso');
-      return;
-    }
+  const puntosNecesarios = this.calcularPuntosRequeridos(curso.precio);
 
-    this.mostrarMensaje(`🎁 Has canjeado el curso: ${curso.nombre}`);
-    this.puntaje -= 100;
-    //this.cargarCursos();
+  if (this.puntaje < puntosNecesarios) {
+    this.mostrarMensaje(`❌ Necesitas ${puntosNecesarios} puntos para canjear este curso`);
+    return;
   }
+
+  this.puntaje -= puntosNecesarios;
+  this.mostrarMensaje(`🎁 Has canjeado el curso: ${curso.nombre}`);
+}
+
 
   validarPrecio() {
     if (this.nuevoCurso.precio === null || this.nuevoCurso.precio === undefined) return;

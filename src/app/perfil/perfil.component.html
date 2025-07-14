@@ -83,8 +83,14 @@
       </div>
     </div>
 
+    <!-- Botón para mostrar u ocultar tabla -->
+<div *ngIf="tipoUsuario === 'estandar'">
+  <button (click)="mostrarTablaCanje = !mostrarTablaCanje">
+    📋 {{ mostrarTablaCanje ? 'Ocultar cursos para canjear' : 'Ver cursos para canjear' }}
+  </button>
+</div>
     <!-- Tabla con canje solo para estándar, siempre visible -->
-    <div class="contenido" *ngIf="tipoUsuario === 'estandar'">
+    <div class="contenido" *ngIf="tipoUsuario === 'estandar' && mostrarTablaCanje">
       <div class="tabla-responsive">
         <table class="tabla-usuarios">
           <thead>
@@ -103,7 +109,11 @@
               <td>{{ c.nombre }}</td>
               <td>{{ c.duracion }}</td>
               <td>{{ c.horario }}</td>
-              <td>S/ {{ c.precio }}</td>
+              <td>
+                S/ {{ c.precio }}<br>
+                🟢 {{ calcularPuntosRequeridos(c.precio) }} puntos
+              </td>
+
               <td>{{ c.modalidad }}</td>
               <td>{{ c.extra }}</td>
               <td><button (click)="canjearCurso(c)">🎁 Canjear</button></td>
