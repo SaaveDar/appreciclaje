@@ -23,6 +23,7 @@
     "@angular/platform-server": "^19.2.0",
     "@angular/router": "^19.2.0",
     "@angular/ssr": "^19.2.3",
+    "angularx-qrcode": "^19.0.0",
     "axios": "^1.10.0",
     "bootstrap": "^5.3.7",
     "canvas-confetti": "^1.9.3",

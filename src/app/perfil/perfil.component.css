@@ -394,3 +394,159 @@ dialog form button[type="button"]:hover {
   gap: 0.5rem;
   border-top: 1px solid #dee2e6;
 }
+
+
+/* 🌟 Estilo base de la tabla */
+.tabla-cursos {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  margin-top: 1.5rem;
+}
+
+/* 🧠 Encabezados */
+.tabla-cursos th {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  color: #ffffff;
+  text-align: left;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 📘 Celdas */
+.tabla-cursos td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #eeeeee;
+  font-size: 14px;
+  color: #333333;
+}
+
+/* 🖱️ Hover en filas */
+.tabla-cursos tr:hover {
+  background-color: #f4f6f8;
+  transition: background-color 0.3s;
+}
+
+/* 🧾 Responsividad */
+@media (max-width: 768px) {
+  .tabla-cursos {
+    border: 0;
+  }
+
+  .tabla-cursos thead {
+    display: none;
+  }
+
+  .tabla-cursos tr {
+    display: block;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e0e0e0;
+  }
+
+  .tabla-cursos td {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    text-align: right;
+    font-size: 13px;
+  }
+
+  .tabla-cursos td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #1976d2;
+    text-align: left;
+  }
+}
+
+
+/* Contenedor de botones: separados y responsivos */
+.botones-cursos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+  justify-content: flex-start;
+}
+
+/* Estilo general de los botones */
+.botones-cursos button {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #ffffff;
+  background: linear-gradient(135deg, #388e3c, #2e7d32);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: background 0.3s, transform 0.2s;
+}
+
+/* Hover efecto */
+.botones-cursos button:hover {
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  transform: scale(1.02);
+}
+
+/* Responsive ajuste: botones al 100% en móviles */
+@media (max-width: 600px) {
+  .botones-cursos {
+    flex-direction: column;
+  }
+
+  .botones-cursos button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+
+.qr-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #f9f9f9;
+  border: 2px solid #e0e0e0;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.qr-container h3 {
+  font-size: 1.4rem;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.qr-container p {
+  margin: 0.5rem 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.qr-container qrcode {
+  display: inline-block;
+  margin-top: 1rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.qr-detalle {
+  font-size: 0.8rem;
+  color: gray;
+  word-break: break-all;
+  background: #f0f0f0;
+  padding: 0.3rem;
+  border-radius: 0.3rem;
+}

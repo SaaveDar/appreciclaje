@@ -426,6 +426,81 @@ app.post('/api/canjear-curso', (req, res) => {
 });
 
 
+// ✅ Ruta para obtener cursos canjeados por usuario
+app.get('/api/cursos-canjeados/:usuarioId', (req, res) => {
+  const { usuarioId } = req.params;
+
+  const query = `
+    SELECT 
+      c.nombre, 
+      c.duracion, 
+      c.horario, 
+      c.modalidad, 
+      c.extra, 
+      c.precio, 
+      DATE_FORMAT(cj.fecha_canje, '%d/%m/%Y %H:%i:%s') AS fecha_canje
+    FROM cursos_canjeados cj
+    INNER JOIN cursos c ON cj.curso_id = c.id
+    WHERE cj.usuario_id = ?
+    ORDER BY cj.fecha_canje DESC
+  `;
+
+  connection.query(query, [usuarioId], (err, results) => {
+    if (err) {
+      console.error('❌ Error al obtener cursos canjeados:', err.message);
+      return res.status(500).json({ mensaje: 'Error al obtener cursos canjeados', error: err.message });
+    }
+
+    res.status(200).json(results);
+  });
+});
+
+
+// ✅ Escanear QR y sumar puntos al progreso
+app.post('/api/escanear-qr', (req, res) => {
+  const { usuario_id, puntos } = req.body;
+
+  if (!usuario_id || !puntos) {
+    return res.status(400).json({ mensaje: '⚠️ Datos incompletos' });
+  }
+
+  // Obtener el progreso actual
+  const getQuery = `SELECT * FROM progreso_juego WHERE usuario_id = ?`;
+  connection.query(getQuery, [usuario_id], (err, result) => {
+    if (err) {
+      console.error('❌ Error al consultar progreso:', err.message);
+      return res.status(500).json({ mensaje: 'Error al consultar progreso', error: err.message });
+    }
+
+    if (result.length === 0) {
+      // Si no hay progreso aún, insertar uno nuevo
+      const insert = `INSERT INTO progreso_juego (usuario_id, puntaje, nivel, medallas, fecha_actualizacion) VALUES (?, ?, ?, ?, NOW())`;
+      connection.query(insert, [usuario_id, puntos, 1, 'QR'], (err2) => {
+        if (err2) {
+          console.error('❌ Error al insertar progreso:', err2.message);
+          return res.status(500).json({ mensaje: 'Error al registrar puntos QR', error: err2.message });
+        }
+
+        return res.status(200).json({ mensaje: '✅ ¡Has escaneado el QR y ganado 150 puntos!' });
+      });
+    } else {
+      const progreso = result[0];
+      const nuevoPuntaje = progreso.puntaje + puntos;
+      const nuevoNivel = Math.floor(nuevoPuntaje / 500); // por ejemplo
+      const update = `UPDATE progreso_juego SET puntaje = ?, nivel = ?, fecha_actualizacion = NOW() WHERE usuario_id = ?`;
+
+      connection.query(update, [nuevoPuntaje, nuevoNivel, usuario_id], (err3) => {
+        if (err3) {
+          console.error('❌ Error al actualizar puntos QR:', err3.message);
+          return res.status(500).json({ mensaje: 'Error al actualizar puntos', error: err3.message });
+        }
+
+        return res.status(200).json({ mensaje: '✅ ¡Has escaneado el QR y ganado 150 puntos!' });
+      });
+    }
+  });
+});
+
 
 
 // ✅ Ruta protegida (fuera de la función verificarToken)

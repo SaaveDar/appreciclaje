@@ -37,6 +37,19 @@
   </ng-template>
 </div>
 
+    <!-- Solo el administrador ve el código QR -->
+    <div *ngIf="tipoUsuario === 'administrador'" class="qr-container">
+      <h3>📷 Código QR para Escaneo</h3>
+      <p style="color: gray; font-size: 0.8rem;">Contenido del QR: {{ qrData }}</p>
+
+      <p>📌 Los usuarios estándar pueden escanear este código para recibir puntos.</p>
+
+      <qrcode 
+        [qrdata]="qrData" 
+        [width]="200" 
+        [errorCorrectionLevel]="'M'">
+      </qrcode>
+    </div>
 
   <!-- ✅ Solo ADMIN y DOCENTE ven las pestañas -->
   <div class="perfil-container">
@@ -48,6 +61,12 @@
       <div class="tab" [class.active]="mostrarTablaCursos" *ngIf="puedeVerCursos()" (click)="listarCursos()">
         Cursos con Certificación
       </div>
+    </div>
+
+
+    <div *ngIf="tipoUsuario === 'estandar'" class="qr-bonus">
+      <button (click)="escanearQR()">📲 Escanear Código QR</button>
+      <p *ngIf="mensajeQR" style="margin-top: 0.5rem;">{{ mensajeQR }}</p>
     </div>
 
     <!-- Tabla de usuarios (solo admin) -->
@@ -84,11 +103,16 @@
     </div>
 
     <!-- Botón para mostrar u ocultar tabla -->
-<div *ngIf="tipoUsuario === 'estandar' && puedeCanjearAlgunCurso()">
-  <button (click)="mostrarTablaCanje = !mostrarTablaCanje">
+<div class="botones-cursos" *ngIf="tipoUsuario === 'estandar'">
+  <button *ngIf="puedeCanjearAlgunCurso()" (click)="mostrarTablaCanje = !mostrarTablaCanje">
     📋 {{ mostrarTablaCanje ? 'Ocultar cursos para canjear' : 'Ver cursos para canjear' }}
   </button>
+
+  <button (click)="mostrarCursosCanjeados = !mostrarCursosCanjeados">
+    🎓 {{ mostrarCursosCanjeados ? 'Ocultar cursos canjeados' : 'Ver cursos canjeados' }}
+  </button>
 </div>
+
 
 
     <!-- Tabla con canje solo para estándar, siempre visible -->
@@ -125,6 +149,33 @@
       </div>
     </div>
 
+    <!-- Tabla de cursos ya canjeados -->
+<div *ngIf="mostrarCursosCanjeados">
+  <table class="tabla-cursos">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Duración</th>
+        <th>Horario</th>
+        <th>Modalidad</th>
+        <th>Extra</th>
+        <th>Precio</th>
+        <th>Fecha Canje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let curso of cursosCanjeados">
+        <td>{{ curso.nombre }}</td>
+        <td>{{ curso.duracion }}</td>
+        <td>{{ curso.horario }}</td>
+        <td>{{ curso.modalidad }}</td>
+        <td>{{ curso.extra }}</td>
+        <td>S/. {{ curso.precio }}</td>
+        <td>{{ curso.fecha_canje }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
     <!-- Tabla completa solo para admin/docente -->
     <div class="contenido" *ngIf="mostrarTablaCursos && (puedeVerCursos() || puedeVerUsuarios())">
       <div class="filtros">

@@ -4,11 +4,13 @@ import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { QRCodeComponent } from 'angularx-qrcode';
+
 
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule],
+  imports: [CommonModule, HttpClientModule, FormsModule, QRCodeComponent],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.css']
 })
@@ -74,6 +76,9 @@ export class PerfilComponent implements OnInit {
     }
   }
 
+  mostrarCursosCanjeados = false;
+  cursosCanjeados: any[] = [];
+
   ngOnInit(): void {
     if (!this.isBrowser) return;
 
@@ -97,11 +102,25 @@ export class PerfilComponent implements OnInit {
         this.tipoDocumento = perfil.tipo_documento ?? '';
         this.documento = perfil.documento ?? '';
         this.fechaRegistro = perfil.fecha_registro ?? '';
+        //this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
         this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
+
+        // ✅ Generar QR solo si es administrador
+        if (this.tipoUsuario === 'administrador') {
+          this.generarQR(); // Genera inicialmente
+
+          // 🔁 Regenerar QR cada 60 segundos
+          setInterval(() => {
+            this.generarQR();
+          }, 60000);
+        }
+
+
         this.edad = this.calcularEdad(perfil.fecha_nacimiento);
 
         if (this.tipoUsuario === 'estandar') {
           this.listarCursos();
+          this.obtenerCursosCanjeados();
         }
       },
       error: err => {
@@ -127,7 +146,45 @@ export class PerfilComponent implements OnInit {
         this.medallas = '';
       }
     });
+
   }
+
+  generarQR() {
+  const bono = {
+    tipo: 'bono',
+    puntos: 150,
+    fecha: new Date().toISOString(), // Actualiza fecha cada vez
+    token: Math.random().toString(36).substring(2, 10) // Token aleatorio para variar visual del QR
+  };
+
+  this.qrData = JSON.stringify(bono);
+  console.log('📦 QR generado:', this.qrData); // Depuración opcional
+}
+
+  obtenerCursosCanjeados() {
+  const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+  const usuarioId = usuario.id;
+
+  if (!usuarioId) {
+    console.warn('⚠️ No se encontró usuario logueado');
+    return;
+  }
+
+  const url = this.apiUrl.includes('api.php')
+    ? `${this.apiUrl}?accion=cursos-canjeados&usuario_id=${usuarioId}`
+    : `${this.apiUrl}/cursos-canjeados/${usuarioId}`;
+
+  this.http.get<any[]>(url).subscribe({
+    next: (data) => {
+      this.cursosCanjeados = data;
+    },
+    error: (err) => {
+      console.error('❌ Error al obtener cursos canjeados:', err);
+    }
+  });
+}
+
+
 
   calcularPuntosRequeridos(precio: number): number {
   if (precio >= 200) return 800;
@@ -346,4 +403,48 @@ verCursosCertificados() {
   puedeVerCursos(): boolean {
     return this.tipoUsuario === 'administrador' || this.tipoUsuario === 'docente';
   }
+
+  
+  obtenerProgreso() {
+  const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+  const userId = usuario.id;
+
+  const progresoUrl = this.apiUrl.includes('api.php')
+    ? `${this.apiUrl}?accion=progreso&usuario_id=${userId}`
+    : `${this.apiUrl}/progreso/${userId}`;
+
+  this.http.get<any>(progresoUrl).subscribe({
+    next: progreso => {
+      this.puntaje = progreso.puntaje ?? 0;
+      this.nivel = progreso.nivel ?? 1;
+      this.medallas = progreso.medallas ?? '';
+    },
+    error: () => {
+      this.puntaje = 0;
+      this.nivel = 1;
+      this.medallas = '';
+    }
+  });
+}
+mensajeQR = '';
+qrData: string = '';
+
+escanearQR(): void {
+  const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+  const usuario_id = usuario.id;
+
+  this.http.post<any>(this.apiUrl + '?accion=escanear-qr', {
+    usuario_id: usuario_id,
+    puntos: 150
+  }).subscribe({
+    next: (res) => {
+      this.mensajeQR = res.mensaje;
+      this.obtenerProgreso(); // actualiza puntos
+    },
+    error: (err) => {
+      this.mensajeQR = err.error?.mensaje || 'Error al escanear QR';
+    }
+  });
+}
+
 }
