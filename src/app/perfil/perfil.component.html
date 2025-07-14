@@ -84,11 +84,12 @@
     </div>
 
     <!-- Botón para mostrar u ocultar tabla -->
-<div *ngIf="tipoUsuario === 'estandar' && puntaje > 100">
+<div *ngIf="tipoUsuario === 'estandar' && puedeCanjearAlgunCurso()">
   <button (click)="mostrarTablaCanje = !mostrarTablaCanje">
     📋 {{ mostrarTablaCanje ? 'Ocultar cursos para canjear' : 'Ver cursos para canjear' }}
   </button>
 </div>
+
 
     <!-- Tabla con canje solo para estándar, siempre visible -->
     <div class="contenido" *ngIf="tipoUsuario === 'estandar' && mostrarTablaCanje">
@@ -198,12 +199,12 @@
 
 
   <!-- Modal simple -->
-<div class="modal" tabindex="-1" [ngClass]="{ 'show': mostrarModal }" [ngStyle]="{ 'display': mostrarModal ? 'block' : 'none', 'background-color': 'rgba(0, 0, 0, 0.5)' }">
+<div class="modal" [ngClass]="{ 'show': mostrarModal }" [ngStyle]="{ 'display': mostrarModal ? 'flex' : 'none' }">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Mensaje</h5>
-        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarModal()">×</button>
       </div>
       <div class="modal-body">
         <p>{{ mensajeModal }}</p>
@@ -214,5 +215,6 @@
     </div>
   </div>
 </div>
+
 
 </div>

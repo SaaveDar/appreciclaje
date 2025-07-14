@@ -67,6 +67,15 @@ CREATE TABLE recompensas (
   estado TINYINT DEFAULT 1
 );
 
+CREATE TABLE cursos_canjeados (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT NOT NULL,
+  curso_id INT NOT NULL,
+  fecha_canje DATETIME DEFAULT CURRENT_TIMESTAMP,
+  puntos_utilizados INT NOT NULL,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+  FOREIGN KEY (curso_id) REFERENCES cursos(id)
+);
 
 -- Tabla: tipos_residuos
 CREATE TABLE tipos_residuos (

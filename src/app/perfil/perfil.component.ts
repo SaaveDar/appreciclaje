@@ -277,6 +277,11 @@ verCursosCertificados() {
     this.usuariosFiltrados = filtrados.slice(0, this.cantidadFilas);
   }
 
+  puedeCanjearAlgunCurso(): boolean {
+  return this.cursosFiltrados.some(curso => this.puntaje >= this.calcularPuntosRequeridos(curso.precio));
+}
+
+
   canjearCurso(curso: any) {
   const puntosNecesarios = this.calcularPuntosRequeridos(curso.precio);
 
@@ -285,9 +290,37 @@ verCursosCertificados() {
     return;
   }
 
-  this.puntaje -= puntosNecesarios;
-  this.mostrarMensaje(`🎁 Has canjeado el curso: ${curso.nombre}`);
+  const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+  const usuario_id = usuario.id;
+
+  if (!usuario_id) {
+    this.mostrarMensaje('⚠️ No se encontró información del usuario. Inicia sesión nuevamente.');
+    return;
+  }
+
+  const payload = {
+    usuario_id,
+    curso_id: curso.id,
+    puntos_utilizados: puntosNecesarios
+  };
+
+  const url = this.apiUrl.includes('api.php')
+    ? `${this.apiUrl}?accion=canjear-curso`
+    : `${this.apiUrl}/canjear-curso`;
+
+  this.http.post<any>(url, payload).subscribe({
+    next: res => {
+      this.puntaje -= puntosNecesarios;
+      this.mostrarMensaje(res.mensaje || '🎁 Curso canjeado con éxito');
+    },
+    error: err => {
+      console.error('❌ Error al canjear:', err);
+      this.mostrarMensaje(err.error?.mensaje || err.error?.error || '❌ Error al registrar el canje');
+    }
+  });
 }
+
+
 
 
   validarPrecio() {

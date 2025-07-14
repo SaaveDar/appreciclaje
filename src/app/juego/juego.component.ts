@@ -304,6 +304,7 @@ export class JuegoComponent implements OnInit {
 }
 
 
+
   guardarPuntaje(): void {
     const nuevoNivel = Math.max(this.nivelActual, this.nivelSeleccionado);
     const nuevaMedalla = this.calcularMedallaPorNivel(nuevoNivel);

@@ -368,6 +368,65 @@ app.post('/api/cursos', (req, res) => {
   });
 });
 
+// registor de canjear_cursos
+app.post('/api/canjear-curso', (req, res) => {
+  const { usuario_id, curso_id, puntos_utilizados } = req.body;
+
+  if (!usuario_id || !curso_id || !puntos_utilizados) {
+    return res.status(400).json({ error: 'Faltan datos para el canje' });
+  }
+
+  // 1️⃣ Verificar si ya se canjeó ese curso
+  const checkSql = `SELECT id FROM cursos_canjeados WHERE usuario_id = ? AND curso_id = ?`;
+  connection.query(checkSql, [usuario_id, curso_id], (checkErr, checkResult) => {
+    if (checkErr) {
+      console.error('❌ Error al verificar canje:', checkErr);
+      return res.status(500).json({ error: 'Error al verificar canje' });
+    }
+
+    if (checkResult.length > 0) {
+      return res.status(409).json({ mensaje: '⚠️ Ya canjeaste este curso anteriormente.' });
+    }
+
+    // 2️⃣ Obtener puntos actuales
+    const puntosQuery = `SELECT puntaje FROM progreso_juego WHERE usuario_id = ?`;
+    connection.query(puntosQuery, [usuario_id], (err2, result2) => {
+      if (err2 || result2.length === 0) {
+        return res.status(500).json({ error: 'Error al obtener puntaje' });
+      }
+
+      const puntosActuales = result2[0].puntaje;
+
+      // 3️⃣ Validar si tiene puntos suficientes
+      if (puntosActuales < puntos_utilizados) {
+        return res.status(400).json({ mensaje: '⚠️ No tienes suficientes puntos para canjear este curso.' });
+      }
+
+      // 4️⃣ Insertar el canje
+      const insertSql = `INSERT INTO cursos_canjeados (usuario_id, curso_id, puntos_utilizados) VALUES (?, ?, ?)`;
+      connection.query(insertSql, [usuario_id, curso_id, puntos_utilizados], (insertErr) => {
+        if (insertErr) {
+          console.error('❌ Error al registrar curso canjeado:', insertErr);
+          return res.status(500).json({ error: 'Error al registrar el canje', detalle: insertErr.message });
+        }
+
+        // 5️⃣ Restar puntos
+        const updateSql = `UPDATE progreso_juego SET puntaje = puntaje - ? WHERE usuario_id = ?`;
+        connection.query(updateSql, [puntos_utilizados, usuario_id], (updateErr) => {
+          if (updateErr) {
+            console.error('❌ Error al descontar puntos:', updateErr);
+            return res.status(500).json({ error: 'Error al descontar puntos' });
+          }
+
+          return res.status(200).json({ mensaje: '🎉 Curso canjeado exitosamente' });
+        });
+      });
+    });
+  });
+});
+
+
+
 
 // ✅ Ruta protegida (fuera de la función verificarToken)
 app.get('/api/protegido', verificarToken, (req, res) => {
