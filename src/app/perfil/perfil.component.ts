@@ -5,12 +5,14 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { QRCodeComponent } from 'angularx-qrcode';
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
+import { BarcodeFormat } from '@zxing/library';
 
 
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule, QRCodeComponent],
+  imports: [CommonModule, HttpClientModule, FormsModule, QRCodeComponent, ZXingScannerModule],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.css']
 })
@@ -445,6 +447,53 @@ escanearQR(): void {
       this.mensajeQR = err.error?.mensaje || 'Error al escanear QR';
     }
   });
+}
+
+
+codigoEscaneado = '';
+camaraActiva = false;
+ultimaFechaEscaneo = ''; // Se puede almacenar en localStorage
+formatoQR = [BarcodeFormat.QR_CODE];
+
+
+procesarCodigoQR(resultado: string) {
+  const hoy = new Date().toISOString().split('T')[0]; // Solo YYYY-MM-DD
+  const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+  const usuario_id = usuario.id;
+
+  const claveLocalStorage = `qr-escaneado-${usuario_id}`;
+
+  const ultimaEscaneo = localStorage.getItem(claveLocalStorage);
+
+  if (ultimaEscaneo === hoy) {
+    this.mensajeQR = '⚠️ Ya escaneaste un QR hoy. Intenta mañana.';
+    return;
+  }
+
+  try {
+    const data = JSON.parse(resultado);
+    if (data.tipo === 'bono' && data.puntos === 150) {
+      this.http.post<any>(this.apiUrl + '?accion=escanear-qr', {
+        usuario_id: usuario_id,
+        puntos: 150
+      }).subscribe({
+        next: (res) => {
+          this.mensajeQR = res.mensaje;
+          localStorage.setItem(claveLocalStorage, hoy); // Guarda fecha de escaneo
+          this.obtenerProgreso();
+        },
+        error: (err) => {
+          this.mensajeQR = err.error?.mensaje || '❌ Error al registrar puntos.';
+        }
+      });
+    } else {
+      this.mensajeQR = '❌ QR inválido.';
+    }
+  } catch (e) {
+    this.mensajeQR = '❌ No se pudo leer el código.';
+  }
+
+  this.camaraActiva = false; // Detener cámara luego de escanear
 }
 
 }

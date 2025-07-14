@@ -37,19 +37,7 @@
   </ng-template>
 </div>
 
-    <!-- Solo el administrador ve el código QR -->
-    <div *ngIf="tipoUsuario === 'administrador'" class="qr-container">
-      <h3>📷 Código QR para Escaneo</h3>
-      <p style="color: gray; font-size: 0.8rem;">Contenido del QR: {{ qrData }}</p>
-
-      <p>📌 Los usuarios estándar pueden escanear este código para recibir puntos.</p>
-
-      <qrcode 
-        [qrdata]="qrData" 
-        [width]="200" 
-        [errorCorrectionLevel]="'M'">
-      </qrcode>
-    </div>
+    
 
   <!-- ✅ Solo ADMIN y DOCENTE ven las pestañas -->
   <div class="perfil-container">
@@ -65,9 +53,19 @@
 
 
     <div *ngIf="tipoUsuario === 'estandar'" class="qr-bonus">
-      <button (click)="escanearQR()">📲 Escanear Código QR</button>
+      <button (click)="camaraActiva = true">📲 Escanear Código QR</button>
       <p *ngIf="mensajeQR" style="margin-top: 0.5rem;">{{ mensajeQR }}</p>
+
+      <zxing-scanner
+        *ngIf="camaraActiva"
+        [formats]="formatoQR"
+        (scanSuccess)="procesarCodigoQR($event)">
+      </zxing-scanner>
+
+
+      <button *ngIf="camaraActiva" (click)="camaraActiva = false">❌ Cerrar cámara</button>
     </div>
+
 
     <!-- Tabla de usuarios (solo admin) -->
     <div class="contenido" *ngIf="mostrarTablaUsuarios">
@@ -267,5 +265,18 @@
   </div>
 </div>
 
+<!-- Solo el administrador ve el código QR -->
+    <div *ngIf="tipoUsuario === 'administrador'" class="qr-container">
+      <h3>📷 Código QR para Escaneo</h3>
+      <p style="color: gray; font-size: 0.8rem;">Contenido del QR: {{ qrData }}</p>
+
+      <p>📌 Los usuarios estándar pueden escanear este código para recibir puntos.</p>
+
+      <qrcode 
+        [qrdata]="qrData" 
+        [width]="200" 
+        [errorCorrectionLevel]="'M'">
+      </qrcode>
+    </div>
 
 </div>
