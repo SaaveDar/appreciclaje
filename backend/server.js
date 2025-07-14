@@ -216,7 +216,7 @@ app.get('/api/progreso/:id', (req, res) => {
 
   const query = `
     SELECT puntaje, nivel, medallas 
-    FROM proceso_juego 
+    FROM progreso_juego 
     WHERE usuario_id = ? LIMIT 1
   `;
 

@@ -16,17 +16,27 @@
     <p>🥇 Medallas obtenidas: <span style="font-size: 1.5rem;">{{ medallas }}</span></p>
   </div>
 
-  <div class="cursos-canje">
-    <h3>🎓 Cursos disponibles para canjear</h3>
-    <ul *ngIf="cursosDisponibles.length > 0; else sinCursos">
-      <li *ngFor="let curso of cursosDisponibles">
-        ✅ {{ curso }}
-      </li>
-    </ul>
-    <ng-template #sinCursos>
-      <p>❌ Aún no tienes puntos suficientes para canjear cursos.</p>
-    </ng-template>
-  </div>
+<div class="cursos-canje">
+  <h3>🎓 Cursos disponibles para canjear</h3>
+
+  <!-- Si hay cursos disponibles -->
+  <ul *ngIf="cursosDisponibles.length > 0; else sinCursos">
+    <li *ngFor="let curso of cursosDisponibles">
+      ✅ {{ curso }}
+    </li>
+  </ul>
+
+  <!-- Si NO hay cursos disponibles -->
+  <ng-template #sinCursos>
+    <p *ngIf="puntaje === 0">
+      ❌ Aún no tienes puntos suficientes para canjear cursos.
+    </p>
+    <p *ngIf="puntaje > 0">
+      💡 ¡Aprovecha en canjear tus puntos con algunos cursos de tu interés!
+    </p>
+  </ng-template>
+</div>
+
 
   <!-- ✅ Solo ADMIN y DOCENTE ven las pestañas -->
   <div class="perfil-container">

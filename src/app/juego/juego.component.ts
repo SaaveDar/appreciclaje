@@ -299,9 +299,7 @@ export class JuegoComponent implements OnInit {
       this.puntaje = data.puntaje;
       this.medallas = data.medallas;
     },
-    error: err => {
-      this.mostrarMensaje('❌ Error al cargar tu progreso', 'error');
-    }
+
   });
 }
 
