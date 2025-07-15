@@ -160,14 +160,17 @@
   left: 50%;
   transform: translate(-50%, -50%);
   width: 360px;
-  max-width: 90%;
+  max-width: 95vw;
+  max-height: 90vh; /* ✅ Límite de altura */
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   z-index: 1000;
-  overflow: hidden;
-  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden; /* puede mantenerse si .modal-contenido tiene scroll */
+  display: flex;
+  flex-direction: column;
 }
+
 
 /* Botón de cerrar (X) */
 .modal-close {
@@ -192,8 +195,11 @@
 
 /* Contenido del modal */
 .modal-contenido {
-  padding: 2rem 1.5rem;
+  padding: 3rem 1.5rem 2rem;
   text-align: center;
+  overflow-y: auto;
+  max-height: calc(90vh - 60px); /* deja espacio para header/footer del modal */
+  flex-grow: 1;
 }
 
 /* Título */
@@ -229,6 +235,7 @@
   width: 100%;
   box-sizing: border-box;
 }
+
 
 /* Botón Ingresar */
 .btn-ingresar {
@@ -661,3 +668,23 @@ input[type="date"]#fechaNacimiento:focus {
   }
 }
 
+
+@media (max-width: 400px) {
+  .modal {
+    width: 95vw;
+    height: auto;
+    max-height: 90vh;
+    padding-bottom: 1rem;
+  }
+
+  .modal-contenido {
+    padding: 3rem 1rem 1rem;
+  }
+
+  .modal-close {
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+  }
+}
