@@ -51,22 +51,6 @@
       </div>
     </div>
 
-
-    <div *ngIf="tipoUsuario === 'estandar'" class="qr-bonus">
-      <button (click)="camaraActiva = true">📲 Escanear Código QR</button>
-      <p *ngIf="mensajeQR" style="margin-top: 0.5rem;">{{ mensajeQR }}</p>
-
-      <zxing-scanner
-        *ngIf="camaraActiva"
-        [formats]="formatoQR"
-        (scanSuccess)="procesarCodigoQR($event)">
-      </zxing-scanner>
-
-
-      <button *ngIf="camaraActiva" (click)="camaraActiva = false">❌ Cerrar cámara</button>
-    </div>
-
-
     <!-- Tabla de usuarios (solo admin) -->
     <div class="contenido" *ngIf="mostrarTablaUsuarios">
       <div class="filtros">
@@ -156,7 +140,7 @@
         <th>Duración</th>
         <th>Horario</th>
         <th>Modalidad</th>
-        <th>Extra</th>
+        <th>Incluye</th>
         <th>Precio</th>
         <th>Fecha Canje</th>
       </tr>
@@ -174,6 +158,34 @@
     </tbody>
   </table>
 </div>
+
+    
+    <div *ngIf="tipoUsuario === 'estandar'" class="qr-bonus">
+      <div class="qr-bonus-texto">
+        <h3>🔄 ¡Convierte tus Reciclajes en Recompensas!</h3>
+        <p>
+          Cada vez que lleves tus residuos reciclables a un punto ecológico y escanees el código QR, 
+          estarás sumando <strong>tiempo ecológico</strong> 🌱, desbloqueando <strong>beneficios</strong> y 
+          subiendo de nivel en tu compromiso por el planeta. ♻️
+        </p>
+        <p style="margin-top: 0.5rem;">
+          📍 ¡Encuentra un punto, escanea y gana! ¡El cambio comienza contigo! 💚
+        </p>
+      </div>
+      
+      <button (click)="camaraActiva = true">📲 Escanear Código QR</button>
+      <p *ngIf="mensajeQR" style="margin-top: 0.5rem;">{{ mensajeQR }}</p>
+
+      <zxing-scanner
+        *ngIf="camaraActiva"
+        [formats]="formatoQR"
+        (scanSuccess)="procesarCodigoQR($event)">
+      </zxing-scanner>
+
+
+      <button *ngIf="camaraActiva" (click)="camaraActiva = false">❌ Cerrar cámara</button>
+    </div>
+
     <!-- Tabla completa solo para admin/docente -->
     <div class="contenido" *ngIf="mostrarTablaCursos && (puedeVerCursos() || puedeVerUsuarios())">
       <div class="filtros">

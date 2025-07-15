@@ -422,7 +422,8 @@ export class JuegoComponent implements OnInit {
     if (!esCorrecta) {
       this.todasCorrectas = false;
     } else {
-      this.puntajeJuego += 100;
+      //this.puntajeJuego += 100;
+      this.puntajeJuego += 15;
     }
 
     setTimeout(() => {
@@ -438,7 +439,8 @@ export class JuegoComponent implements OnInit {
   }
 
   finalizarQuiz(): void {
-    if (this.todasCorrectas && this.puntajeJuego === this.preguntas.length * 100) {
+    //if (this.todasCorrectas && this.puntajeJuego === this.preguntas.length * 100) {
+    if (this.todasCorrectas && this.puntajeJuego === this.preguntas.length * 15){
       this.mostrarMensaje('🎉 ¡Felicitaciones! Completaste el nivel correctamente 🎯', 'exito');
       this.guardarPuntaje();
     } else {
@@ -457,7 +459,8 @@ export class JuegoComponent implements OnInit {
     this.temporizadorActivo = false;
 
     if (this.draggedTipo === tipoContenedor) {
-      this.puntajeJuego += 100;
+      //this.puntajeJuego += 100;
+      this.puntajeJuego += 15;
       this.mostrarMensaje('✅ ¡Correcto!', 'exito');
     } else {
       this.arrastreCorrecto = false;

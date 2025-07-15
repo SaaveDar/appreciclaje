@@ -368,7 +368,7 @@ app.post('/api/cursos', (req, res) => {
   });
 });
 
-// registor de canjear_cursos
+// REGISTRRAR EL CANJE DE CURSOS
 app.post('/api/canjear-curso', (req, res) => {
   const { usuario_id, curso_id, puntos_utilizados } = req.body;
 

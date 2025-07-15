@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { BarcodeFormat } from '@zxing/library';
+import { Router } from '@angular/router';
+
 
 
 @Component({
@@ -66,6 +68,7 @@ export class PerfilComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
+    private router: Router, // ✅ nuevo
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -84,8 +87,14 @@ export class PerfilComponent implements OnInit {
   ngOnInit(): void {
     if (!this.isBrowser) return;
 
+    //const usuario = sessionStorage.getItem('usuario');
+    //if (!usuario) return;
     const usuario = sessionStorage.getItem('usuario');
-    if (!usuario) return;
+    if (!usuario) {
+      this.router.navigate(['/inicio']); // 🔁 Redirige si no hay sesión
+      return;
+    }
+
 
     const userData = JSON.parse(usuario);
     const userId = userData.id;

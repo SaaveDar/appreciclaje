@@ -14,6 +14,7 @@ interface PointOfInterest {
   lng: number;
   name: string;
   markerTitle: string;
+  iconUrl?: string; // ✅ ícono personalizado (opcional)
 }
 
 interface Message {
@@ -98,7 +99,12 @@ export class MapaComponent implements OnInit, OnDestroy {
     { lat: -7.825, lng: -79.239, name: 'Av. Panamericana Norte', markerTitle: 'Punto de reciclaje: Av. Panamericana Norte' },
     { lat: -7.823, lng: -79.235, name: 'Municipalidad de Chocope', markerTitle: 'Punto de reciclaje: Municipalidad de Chocope' },
     { lat: -7.826, lng: -79.238, name: 'Centro de Salud Chocope', markerTitle: 'Punto de reciclaje: Centro de Salud Chocope' },
-    { lat: -7.822, lng: -79.236, name: 'Calle Bolívar', markerTitle: 'Punto de reciclaje: Calle Bolívar' }
+    { lat: -7.822, lng: -79.236, name: 'Calle Bolívar', markerTitle: 'Punto de reciclaje: Calle Bolívar' },
+    { lat: -7.7352, lng: -79.3056, name: 'IESTP Paiján', markerTitle: 'Punto de reciclaje: IESTP Paiján' },
+    { lat: -8.11458, lng: -79.03929, name: 'Universidad Nacional de Trujillo', markerTitle: 'Punto de reciclaje: UNT Trujillo' },
+    { lat: -7.4782, lng: -78.8298, name: 'IESTP de Cascas', markerTitle: 'Punto de reciclaje: IESTP de Cascas' },
+    { lat: -8.1136, lng: -79.0290, name: 'Municipalidad Provincial de Trujillo', markerTitle: 'Punto de reciclaje: Municipalidad de Trujillo (MPT)', iconUrl:'🏛️' }
+
   ];
 
   private placedMarkers: Map<string, google.maps.Marker> = new Map();
