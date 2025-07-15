@@ -423,7 +423,7 @@ export class JuegoComponent implements OnInit {
       this.todasCorrectas = false;
     } else {
       //this.puntajeJuego += 100;
-      this.puntajeJuego += 15;
+      //this.puntajeJuego += 15;
     }
 
     setTimeout(() => {
@@ -439,16 +439,17 @@ export class JuegoComponent implements OnInit {
   }
 
   finalizarQuiz(): void {
-    //if (this.todasCorrectas && this.puntajeJuego === this.preguntas.length * 100) {
-    if (this.todasCorrectas && this.puntajeJuego === this.preguntas.length * 15){
-      this.mostrarMensaje('🎉 ¡Felicitaciones! Completaste el nivel correctamente 🎯', 'exito');
-      this.guardarPuntaje();
-    } else {
-      this.mostrarMensaje('❌ Fallaste alguna pregunta o no respondiste a tiempo', 'error');
-      this.mostrarModal = false;
-      this.todasCorrectas = true;
-    }
+  if (this.todasCorrectas) {
+    this.puntajeJuego = 15; // ✅ Puntaje total por completar el quiz correctamente
+    this.mostrarMensaje('🎉 ¡Felicitaciones! Completaste el nivel correctamente 🎯', 'exito');
+    this.guardarPuntaje();
+  } else {
+    this.mostrarMensaje('❌ Fallaste alguna pregunta o no respondiste a tiempo', 'error');
+    this.mostrarModal = false;
+    this.todasCorrectas = true;
   }
+}
+
 
   drop(event: DragEvent, tipoContenedor: string): void {
     event.preventDefault();
@@ -460,7 +461,7 @@ export class JuegoComponent implements OnInit {
 
     if (this.draggedTipo === tipoContenedor) {
       //this.puntajeJuego += 100;
-      this.puntajeJuego += 15;
+      //this.puntajeJuego += 15;
       this.mostrarMensaje('✅ ¡Correcto!', 'exito');
     } else {
       this.arrastreCorrecto = false;
@@ -478,15 +479,17 @@ export class JuegoComponent implements OnInit {
   }
 
   finalizarArrastrar(): void {
-    if (this.arrastreCorrecto && this.puntajeJuego > 0) {
-      this.mostrarMensaje('🎉 ¡Excelente! Completaste el nivel correctamente 🎯', 'exito');
-      this.guardarPuntaje();
-    } else {
-      this.mostrarMensaje('❌ Fallaste al arrastrar algún residuo. Intenta de nuevo', 'error');
-      this.mostrarModal = false;
-      this.arrastreCorrecto = true;
-    }
+  if (this.arrastreCorrecto) {
+    this.puntajeJuego = 15; // ✅ Puntaje fijo por nivel arrastrar completado correctamente
+    this.mostrarMensaje('🎉 ¡Excelente! Completaste el nivel correctamente 🎯', 'exito');
+    this.guardarPuntaje();
+  } else {
+    this.mostrarMensaje('❌ Fallaste al arrastrar algún residuo. Intenta de nuevo', 'error');
+    this.mostrarModal = false;
+    this.arrastreCorrecto = true;
   }
+}
+
 
   dragStart(event: DragEvent, tipo: string): void {
     this.draggedTipo = tipo;
