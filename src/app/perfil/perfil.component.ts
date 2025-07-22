@@ -1,6 +1,6 @@
 // src/app/perfil/perfil.component.ts
 
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID , OnDestroy} from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -9,7 +9,7 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { BarcodeFormat } from '@zxing/library';
 import { Router } from '@angular/router';
 
-
+import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-perfil',
@@ -18,7 +18,12 @@ import { Router } from '@angular/router';
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.css']
 })
-export class PerfilComponent implements OnInit {
+export class PerfilComponent implements OnInit, OnDestroy {
+  cursosCanjeados: any[] = [];
+  actualizacionSub!: Subscription;
+
+
+
   nombreUsuario = '';
   apellidoUsuario = '';
   correoUsuario = '';
@@ -82,9 +87,9 @@ export class PerfilComponent implements OnInit {
   }
 
   mostrarCursosCanjeados = false;
-  cursosCanjeados: any[] = [];
 
   ngOnInit(): void {
+
     if (!this.isBrowser) return;
 
     //const usuario = sessionStorage.getItem('usuario');
@@ -172,7 +177,15 @@ export class PerfilComponent implements OnInit {
   console.log('📦 QR generado:', this.qrData); // Depuración opcional
 }
 
+  ngOnDestroy(): void {
+    if (this.actualizacionSub) {
+      this.actualizacionSub.unsubscribe();
+    }
+  }
+
   obtenerCursosCanjeados() {
+  if (!this.isBrowser) return; // 🛡️ Previene SSR error
+
   const usuario = JSON.parse(sessionStorage.getItem('usuario') || '{}');
   const usuarioId = usuario.id;
 
@@ -194,6 +207,7 @@ export class PerfilComponent implements OnInit {
     }
   });
 }
+
 
 
 
@@ -379,6 +393,7 @@ verCursosCertificados() {
   this.http.post<any>(url, payload).subscribe({
     next: res => {
       this.puntaje -= puntosNecesarios;
+      this.obtenerCursosCanjeados(); // 🔁 ACTUALIZACIÓN INMEDIATA
       this.mostrarMensaje(res.mensaje || '🎁 Curso canjeado con éxito');
     },
     error: err => {
