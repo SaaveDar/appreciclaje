@@ -54,29 +54,37 @@
         <h3>Arrastra cada residuo al contenedor correcto</h3>
 
         <!-- Zona de residuos -->
-        <div class="zona-residuos">
-          <img
-            *ngFor="let residuo of residuos"
-            [src]="'assets/residuos/' + residuo.imagen"
-            [alt]="residuo.nombre"
-            class="residuo"
-            draggable="true"
-            (dragstart)="dragStart($event, residuo.tipo)"
-          />
-        </div>
+        <!-- Zona de residuos -->
+<div class="zona-residuos">
+<img
+  *ngFor="let residuo of residuos"
+  [src]="'assets/residuos/' + residuo.imagen"
+  [alt]="residuo.nombre"
+  class="residuo"
+  draggable="true"
+  (dragstart)="dragStart($event, residuo.tipo)"
+  (touchstart)="onTouchStart($event, residuo.tipo)"
+  (touchmove)="onTouchMove($event)"
+  (touchend)="onTouchEnd($event)"
+  [attr.data-tipo]="residuo.tipo"
+/>
 
-        <!-- Zona de contenedores -->
-        <div class="zona-contenedores">
-          <div
-            class="contenedor"
-            *ngFor="let contenedor of contenedores"
-            [attr.data-tipo]="contenedor.tipo"
-            (dragover)="allowDrop($event)"
-            (drop)="drop($event, contenedor.tipo)"
-          >
-            <img [src]="'assets/contenedores/' + contenedor.imagen" [alt]="contenedor.tipo" />
-          </div>
-        </div>
+</div>
+
+<!-- Zona de contenedores -->
+<div class="zona-contenedores">
+  <div
+    class="contenedor"
+    *ngFor="let contenedor of contenedores"
+    [attr.data-tipo]="contenedor.tipo"
+    (dragover)="allowDrop($event)"
+    (drop)="drop($event, contenedor.tipo)"
+    (touchend)="checkDropMobile($event, contenedor.tipo)"
+  >
+    <img [src]="'assets/contenedores/' + contenedor.imagen" [alt]="contenedor.tipo" />
+  </div>
+</div>
+
       </div>
 
       <button (click)="cerrarModal()">Cancelar</button>

@@ -1,5 +1,5 @@
 // src/app/juego/juego.component.ts
-import { Component, Inject, PLATFORM_ID, OnInit } from '@angular/core';
+import { Component, Inject, PLATFORM_ID, OnInit, AfterViewInit, QueryList, ViewChildren, ElementRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -38,6 +38,69 @@ interface NivelConfig {
   styleUrls: ['./juego.component.css']
 })
 export class JuegoComponent implements OnInit {
+  draggedElement: HTMLElement | null = null;
+
+onTouchStart(event: TouchEvent, tipo: string): void {
+  const target = event.target as HTMLElement;
+  this.draggedTipo = tipo;
+  this.draggedElement = target;
+
+  // Posicionamos el elemento para moverlo con el dedo
+  target.style.position = 'absolute';
+  target.style.zIndex = '1000';
+}
+
+onTouchMove(event: TouchEvent): void {
+  if (!this.draggedElement || this.bloquearPregunta) return;
+
+  const touch = event.touches[0];
+  const element = this.draggedElement;
+
+  element.style.left = `${touch.clientX - element.offsetWidth / 2}px`;
+  element.style.top = `${touch.clientY - element.offsetHeight / 2}px`;
+}
+
+onTouchEnd(event: TouchEvent): void {
+  if (!this.draggedElement || !this.draggedTipo || this.bloquearPregunta) return;
+
+  const touch = event.changedTouches[0];
+  const dropX = touch.clientX;
+  const dropY = touch.clientY;
+
+  const contenedorMatch = this.contenedores.find((contenedor) => {
+    const el = document.getElementById(`contenedor-${contenedor.tipo}`);
+    if (!el) return false;
+
+    const rect = el.getBoundingClientRect();
+    return (
+      dropX >= rect.left &&
+      dropX <= rect.right &&
+      dropY >= rect.top &&
+      dropY <= rect.bottom
+    );
+  });
+
+  clearInterval(this.timer);
+  this.temporizadorActivo = false;
+
+  if (contenedorMatch && contenedorMatch.tipo === this.draggedTipo) {
+    this.mostrarMensaje('✅ ¡Correcto!', 'exito');
+  } else {
+    this.arrastreCorrecto = false;
+    this.mostrarMensaje('❌ Incorrecto', 'error');
+  }
+
+  this.residuos = this.residuos.filter(r => r.tipo !== this.draggedTipo);
+  this.draggedTipo = '';
+  this.draggedElement = null;
+
+  if (this.residuos.length === 0) {
+    this.finalizarArrastrar();
+  } else {
+    this.iniciarTemporizador();
+  }
+}
+
   mensajeVisible = false;
   mensajeTexto = '';
   mensajeTipo: 'exito' | 'error' | 'advertencia' = 'exito';
@@ -244,7 +307,8 @@ export class JuegoComponent implements OnInit {
       }
     ]
   }
-
+  
+  
   };
 
 
@@ -533,4 +597,44 @@ export class JuegoComponent implements OnInit {
     this.temporizadorActivo = false;
     this.bloquearPregunta = true;
   }
+
+checkDropMobile(event: TouchEvent, tipoContenedor: string): void {
+  const touch = event.changedTouches[0];
+  const dropX = touch.clientX;
+  const dropY = touch.clientY;
+
+  if (!this.draggedElement || !this.draggedTipo || this.bloquearPregunta) return;
+
+  const el = (event.currentTarget as HTMLElement);
+  const rect = el.getBoundingClientRect();
+
+  if (
+    dropX >= rect.left &&
+    dropX <= rect.right &&
+    dropY >= rect.top &&
+    dropY <= rect.bottom
+  ) {
+    clearInterval(this.timer);
+    this.temporizadorActivo = false;
+
+    if (this.draggedTipo === tipoContenedor) {
+      this.mostrarMensaje('✅ ¡Correcto!', 'exito');
+    } else {
+      this.arrastreCorrecto = false;
+      this.mostrarMensaje('❌ Incorrecto', 'error');
+    }
+
+    this.residuos = this.residuos.filter(r => r.tipo !== this.draggedTipo);
+    this.draggedTipo = '';
+    this.draggedElement = null;
+
+    if (this.residuos.length === 0) {
+      this.finalizarArrastrar();
+    } else {
+      this.iniciarTemporizador();
+    }
+  }
+}
+
+
 }
