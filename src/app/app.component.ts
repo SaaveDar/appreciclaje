@@ -108,8 +108,8 @@ export class AppComponent implements OnInit {
     edad--; // No ha cumplido aún este año
   }
 
-  if (edad < 16) {
-    this.errorEdad = 'Debes cumplir con las politicas de nuestro servicio web: Tener más de 16 años';
+  if (edad < 10) {
+    this.errorEdad = 'Debes cumplir con las politicas de nuestro servicio web: Tener más de 10 años';
   } else {
     this.errorEdad = '';
   }
