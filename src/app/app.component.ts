@@ -1,10 +1,11 @@
-import { Component, Inject, PLATFORM_ID, OnInit } from '@angular/core';
+import { Component, Inject, PLATFORM_ID, OnInit,  NgZone } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, Router, NavigationStart } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from './servicios/auth.service';
 import { HttpClientModule } from '@angular/common/http';
 import { filter } from 'rxjs';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -22,9 +23,16 @@ export class AppComponent implements OnInit {
   modo: 'login' | 'registro' = 'login';
   mensajeError: string = '';
 
+  mostrarBienvenida: boolean = false;
+
+
   loginEmail = '';
   loginPassword = '';
   mostrarModalLogin: boolean = false;
+
+  estadoConexion: string = 'online';
+  mostrarEstadoConexion: boolean = false;
+
 
   registroNombre = '';
   registroCorreo = '';
@@ -46,30 +54,78 @@ export class AppComponent implements OnInit {
   constructor(
     private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object,
+     private cd: ChangeDetectorRef,
+     private zone: NgZone,
     private router: Router
   ) {}
 
-  ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      const usuarioGuardado = sessionStorage.getItem('usuario');
-      if (usuarioGuardado) {
-        this.usuarioLogueado = JSON.parse(usuarioGuardado);
-        this.isLoggedIn = true;
-      }
+  actualizarEstadoConexion(conectado: boolean) {
+  this.estadoConexion = conectado ? 'online' : 'offline';
+  this.mostrarEstadoConexion = true;
 
-      this.router.events
-        .pipe(filter(event => event instanceof NavigationStart))
-        .subscribe(event => {
-          const nav = event as NavigationStart;
-          const rutasProtegidas = ['/mapa', '/juego'];
-          const user = sessionStorage.getItem('usuario');
-
-          if (!user && rutasProtegidas.some(ruta => nav.url.includes(ruta))) {
-            this.router.navigate(['/'], { replaceUrl: true });
-          }
-        });
-    }
+  // Ocultar el mensaje después de 3 segundos si está online
+  if (conectado) {
+    setTimeout(() => {
+      this.mostrarEstadoConexion = false;
+    }, 3000);
   }
+}
+
+
+   mostrarNotificacion(estado: string) {
+    this.estadoConexion = estado;
+    this.mostrarEstadoConexion = true;
+    this.cd.detectChanges();
+
+    setTimeout(() => {
+      this.mostrarEstadoConexion = false;
+      this.cd.detectChanges();
+    }, 4000);
+  }
+
+  ngOnInit() {
+  if (isPlatformBrowser(this.platformId)) {
+    // Establece el estado inicial
+    this.actualizarEstadoConexion(navigator.onLine);
+
+    // Detectar conexión
+    window.addEventListener('online', () => {
+      this.zone.run(() => {
+        this.actualizarEstadoConexion(true);
+        this.cd.detectChanges();  // Forzar actualización visual
+      });
+    });
+
+    // Detectar desconexión
+    window.addEventListener('offline', () => {
+      this.zone.run(() => {
+        this.actualizarEstadoConexion(false);
+        this.cd.detectChanges();  // Forzar actualización visual
+      });
+    });
+
+    // Comprobar usuario
+    const usuarioGuardado = sessionStorage.getItem('usuario');
+    if (usuarioGuardado) {
+      this.usuarioLogueado = JSON.parse(usuarioGuardado);
+      this.isLoggedIn = true;
+    }
+
+    // Redirección si no hay usuario y entra a rutas protegidas
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationStart))
+      .subscribe(event => {
+        const nav = event as NavigationStart;
+        const rutasProtegidas = ['/mapa', '/juego'];
+        const user = sessionStorage.getItem('usuario');
+
+        if (!user && rutasProtegidas.some(ruta => nav.url.includes(ruta))) {
+          this.router.navigate(['/'], { replaceUrl: true });
+        }
+      });
+  }
+}
+
 
   soloNumeros(event: KeyboardEvent) {
   const charCode = event.which ? event.which : event.keyCode;
@@ -173,6 +229,13 @@ login() {
       this.isLoggedIn = true;
       this.cerrarModal();
       this.mensajeError = '';
+
+       // 👉 Mostrar modal de bienvenida
+      this.mostrarBienvenida = true;
+      setTimeout(() => {
+        this.mostrarBienvenida = false;
+      }, 3000);
+      
     },
     error: (err) => {
       console.error('❌ Error en login:', err);

@@ -30,7 +30,7 @@
         <div class="texto-bienvenida" (click)="toggleMenu()" style="cursor: pointer;">
           <!-- Se asume que usuarioLogueado.nombre existe, si no, puedes usar usuarioLogueado.correo -->
           <p class="saludo">¡Bienvenido,</p>
-          <p class="nombre-usuario">{{ usuarioLogueado.nombre  }}</p>
+          <p class="nombre-usuario">{{ usuarioLogueado.nombre  }}!</p>
           
         </div>
 
@@ -212,6 +212,21 @@
 <div class="modal-exito" *ngIf="registroExitoso">
   ✅ Usuario registrado correctamente
 </div>
+
+
+<!-- Modal de Bienvenida -->
+<div class="modal-bienvenida" *ngIf="mostrarBienvenida">
+  👋 ¡Bienvenido, {{ usuarioLogueado?.nombre || 'usuario' }}!
+</div>
+
+
+<!-- 🟢 Modal de conexión/desconexión -->
+<div *ngIf="mostrarEstadoConexion" class="modal-conexion" [ngClass]="estadoConexion">
+  <span *ngIf="estadoConexion === 'offline'">🔴 Sin conexión a internet</span>
+  <span *ngIf="estadoConexion === 'online'">🟢 Conexión restablecida</span>
+</div>
+
+
 
 
 <!-- Footer de la aplicación -->
