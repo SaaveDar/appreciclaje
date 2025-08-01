@@ -1,6 +1,6 @@
 // src/app/perfil/perfil.component.ts
 
-import { Component, OnInit, Inject, PLATFORM_ID , OnDestroy} from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID , OnDestroy, HostListener } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,8 @@ import { BarcodeFormat } from '@zxing/library';
 import { Router } from '@angular/router';
 
 import { interval, Subscription } from 'rxjs';
+import { AuthService } from '../servicios/auth.service'; // Ajusta la ruta según tu estructura
+
 
 @Component({
   selector: 'app-perfil',
@@ -19,6 +21,20 @@ import { interval, Subscription } from 'rxjs';
   styleUrls: ['./perfil.component.css']
 })
 export class PerfilComponent implements OnInit, OnDestroy {
+  @HostListener('window:beforeunload', ['$event'])
+onBeforeUnload() {
+  const usuario = sessionStorage.getItem('usuario');
+  if (usuario) {
+    const correo = JSON.parse(usuario).correo;
+    if (correo && this.apiUrl.includes('localhost')) {
+      navigator.sendBeacon(`http://localhost:3000/api/usuario/desconectar`, JSON.stringify({ correo }));
+    } else if (correo) {
+      navigator.sendBeacon(`https://comunidadvapps.com/api.php?accion=desconectar`, JSON.stringify({ correo }));
+    }
+  }
+}
+
+
   cursosCanjeados: any[] = [];
   actualizacionSub!: Subscription;
 
@@ -74,6 +90,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
   constructor(
     private http: HttpClient,
     private router: Router, // ✅ nuevo
+    private authService: AuthService, // ✅ Agrega esto
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -87,25 +104,53 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   mostrarCursosCanjeados = false;
+  usuarioLogueado: any = null;
+  isLoggedIn: boolean = false;
+
+  usuarioActual: any = null; // ✅ Declarar la propiedad
+  ultimaConexion: string | null = null;
+
+  verEstadoEnTiempoReal(correo: string) {
+  if (!correo || !this.isBrowser) return;
+
+  this.actualizacionSub = interval(10000).subscribe(() => {
+    const url = this.apiUrl.includes('api.php')
+      ? `${this.apiUrl}?accion=estado-en-linea&correo=${correo}`
+      : `${this.apiUrl}/usuario/estado/${correo}`;
+
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        // Puedes usar esto para actualizar alguna vista en vivo si deseas
+        console.log('📡 Estado en tiempo real:', res.estado);
+      },
+      error: () => {
+        console.warn('⚠️ Error al obtener estado en tiempo real');
+      }
+    });
+  });
+}
+
 
   ngOnInit(): void {
+  this.authService.usuario$.subscribe(usuario => {
+    this.usuarioActual = usuario;
 
-    if (!this.isBrowser) return;
-
-    //const usuario = sessionStorage.getItem('usuario');
-    //if (!usuario) return;
-    const usuario = sessionStorage.getItem('usuario');
     if (!usuario) {
-      this.router.navigate(['/inicio']); // 🔁 Redirige si no hay sesión
+      this.ultimaConexion = this.authService.getUltimaConexion();
+      this.router.navigate(['/inicio']);
       return;
     }
 
+    if (!this.isBrowser) return;
 
-    const userData = JSON.parse(usuario);
-    const userId = userData.id;
-    this.tipoUsuario = userData.tipo_usuario || 'estandar';
+    // ✅ Actualizar estado en línea y monitorear en tiempo real al usuario actual
+    this.authService.actualizarEstadoEnLinea(usuario.correo);
+    this.verEstadoEnTiempoReal(usuario.correo);
 
-    // 🔍 Obtener perfil
+    const userId = usuario.id;
+    this.tipoUsuario = usuario.tipo_usuario || 'estandar';
+
+    // ✅ Cargar perfil completo
     const perfilUrl = this.apiUrl.includes('api.php')
       ? `${this.apiUrl}?accion=perfil&id=${userId}`
       : `${this.apiUrl}/perfil/${userId}`;
@@ -118,21 +163,19 @@ export class PerfilComponent implements OnInit, OnDestroy {
         this.tipoDocumento = perfil.tipo_documento ?? '';
         this.documento = perfil.documento ?? '';
         this.fechaRegistro = perfil.fecha_registro ?? '';
-        //this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
         this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
 
-        // ✅ Generar QR solo si es administrador
-        if (this.tipoUsuario === 'administrador') {
-          this.generarQR(); // Genera inicialmente
-
-          // 🔁 Regenerar QR cada 60 segundos
-          setInterval(() => {
-            this.generarQR();
-          }, 60000);
-        }
-
-
         this.edad = this.calcularEdad(perfil.fecha_nacimiento);
+
+        if (this.tipoUsuario === 'administrador') {
+          this.generarQR();
+          this.verUsuarios(); // 🔁 Carga usuarios
+
+          // ✅ Actualizar tabla de usuarios cada 10 segundos
+          this.actualizacionSub = interval(10000).subscribe(() => {
+            this.verUsuarios(); // Actualiza usuarios y estados en línea
+          });
+        }
 
         if (this.tipoUsuario === 'estandar') {
           this.listarCursos();
@@ -144,7 +187,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
       }
     });
 
-    // 🎮 Obtener progreso
     const progresoUrl = this.apiUrl.includes('api.php')
       ? `${this.apiUrl}?accion=progreso&usuario_id=${userId}`
       : `${this.apiUrl}/progreso/${userId}`;
@@ -154,7 +196,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
         this.puntaje = progreso.puntaje ?? 0;
         this.nivel = progreso.nivel ?? 1;
         this.medallas = progreso.medallas ?? '';
-        //this.cargarCursos();
       },
       error: () => {
         this.puntaje = 0;
@@ -162,8 +203,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
         this.medallas = '';
       }
     });
+  });
+}
 
-  }
+
 
   generarQR() {
   const bono = {
@@ -518,6 +561,65 @@ procesarCodigoQR(resultado: string) {
   }
 
   this.camaraActiva = false; // Detener cámara luego de escanear
+}
+
+
+ 
+
+getEstadoConexion(usuario: any): string {
+  // ✅ Si está en línea según base de datos
+  if (usuario.en_linea === 1) {
+    return '🟢 En línea';
+  }
+
+  // Si no tiene último acceso
+  if (!usuario.ultima_conexion) return 'Sin registro';
+
+  const ultima = new Date(usuario.ultima_conexion);
+  const hoy = new Date();
+  const ayer = new Date();
+  ayer.setDate(hoy.getDate() - 1);
+
+  const esMismoDia = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  if (esMismoDia(ultima, hoy)) {
+    return '🟡 Última conexión: hoy';
+  } else if (esMismoDia(ultima, ayer)) {
+    return '🟡 Última conexión: ayer';
+  } else {
+    const opciones: Intl.DateTimeFormatOptions = {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    };
+    return `🔴 Última conexión: ${ultima.toLocaleDateString('es-ES', opciones)}`;
+  }
+}
+
+obtenerTiempoTranscurrido(fechaString: string): string {
+  if (!fechaString) return '';
+
+  const fechaConexion = new Date(fechaString);
+  const ahora = new Date();
+  const diferenciaMs = ahora.getTime() - fechaConexion.getTime();
+
+  const segundos = Math.floor(diferenciaMs / 1000);
+  const minutos = Math.floor(segundos / 60);
+  const horas = Math.floor(minutos / 60);
+  const dias = Math.floor(horas / 24);
+
+  if (dias > 0) {
+    return `Hace ${dias} día${dias > 1 ? 's' : ''}`;
+  } else if (horas > 0) {
+    return `Hace ${horas} hora${horas > 1 ? 's' : ''}`;
+  } else if (minutos > 0) {
+    return `Hace ${minutos} minuto${minutos > 1 ? 's' : ''}`;
+  } else {
+    return `Hace ${segundos} segundo${segundos !== 1 ? 's' : ''}`;
+  }
 }
 
 }

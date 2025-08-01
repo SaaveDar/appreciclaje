@@ -18,6 +18,10 @@ CREATE TABLE usuarios (
   fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+
+ALTER TABLE usuarios ADD COLUMN en_linea TINYINT(1) DEFAULT 0;
+ALTER TABLE usuarios ADD COLUMN ultima_conexion DATETIME;
+
 /*
 ALTER TABLE usuarios
 ADD COLUMN fecha_nacimiento DATE NOT NULL DEFAULT '2000-01-01'

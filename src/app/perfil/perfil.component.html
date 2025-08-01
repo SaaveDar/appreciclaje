@@ -70,6 +70,7 @@
               <th>Nombres y Apellidos</th>
               <th>Correo</th>
               <th>Tipo</th>
+              <th>Ultimo acceso</th>
             </tr>
           </thead>
           <tbody>
@@ -78,6 +79,18 @@
               <td>{{ u.nombre + ' ' + u.apellido }}</td>
               <td>{{ u.correo }}</td>
               <td>{{ u.tipo_usuario }}</td>
+              <!--<td>{{ u.ultimo_acceso ? (u.ultimo_acceso | date: 'short') : 'Sin registro' }}</td>-->
+              <td>
+                <span *ngIf="u.en_linea === 1">🟢 En línea</span>
+                <span *ngIf="u.en_linea === 0">
+                  Última conexión: 
+                  {{ u.ultima_conexion | date:'d \'de\' MMMM \'de\' y, HH:mm' }} 
+                  ({{ u.ultima_conexion ? obtenerTiempoTranscurrido(u.ultima_conexion) : '' }})
+                </span>
+              </td>
+
+
+
             </tr>
           </tbody>
         </table>

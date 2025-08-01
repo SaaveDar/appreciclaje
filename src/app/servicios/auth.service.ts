@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, interval } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -11,8 +11,8 @@ export class AuthService {
   usuario$ = new BehaviorSubject<any>(null);
 
   private readonly API_URL = this.isLocalhost()
-    ? 'http://localhost:3000/api' // Node.js local
-    : 'https://comunidadvapps.com/api.php'; // PHP en producción
+    ? 'http://localhost:3000/api'
+    : 'https://comunidadvapps.com/api.php'; // Solo en producción con PHP
 
   constructor(
     private http: HttpClient,
@@ -20,12 +20,25 @@ export class AuthService {
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
 
-    // ✅ Solo acceder a sessionStorage si es navegador
     if (this.isBrowser) {
       const usuarioGuardado = sessionStorage.getItem('usuario');
       if (usuarioGuardado) {
-        this.usuario$.next(JSON.parse(usuarioGuardado));
+        const usuario = JSON.parse(usuarioGuardado);
+        this.usuario$.next(usuario);
+
+        // ✅ Al recuperar el usuario, actualiza el estado a "en línea"
+        this.actualizarEstadoEnLinea(usuario.correo);
       }
+
+      // Detecta cambios de sesión en otras pestañas
+      interval(5000).subscribe(() => {
+        const usuarioActual = sessionStorage.getItem('usuario');
+        const usuarioParsed = usuarioActual ? JSON.parse(usuarioActual) : null;
+        const actual = this.usuario$.value;
+        if (JSON.stringify(actual) !== JSON.stringify(usuarioParsed)) {
+          this.usuario$.next(usuarioParsed);
+        }
+      });
     }
   }
 
@@ -35,16 +48,16 @@ export class AuthService {
 
   registrarUsuario(data: any): Observable<any> {
     const url = this.isLocalhost()
-      ? `${this.API_URL}/registrar` // Node
-      : `${this.API_URL}?consulta=registrar`; // PHP
+      ? `${this.API_URL}/registrar`
+      : `${this.API_URL}?consulta=registrar`;
 
     return this.http.post(url, data);
   }
 
   loginUsuario(data: any): Observable<any> {
     const url = this.isLocalhost()
-      ? `${this.API_URL}/login` // Node
-      : `${this.API_URL}?consulta=login`; // PHP
+      ? `${this.API_URL}/login`
+      : `${this.API_URL}?consulta=login`;
 
     return this.http.post(url, data);
   }
@@ -63,14 +76,67 @@ export class AuthService {
     if (this.isBrowser) {
       sessionStorage.setItem('usuario', JSON.stringify(usuario));
       this.usuario$.next(usuario);
+
+      // ✅ Actualiza el estado a "en línea" también cuando se actualiza manualmente
+      if (usuario?.correo) {
+        this.actualizarEstadoEnLinea(usuario.correo);
+      }
     }
   }
 
   limpiarUsuario() {
     if (this.isBrowser) {
+      this.guardarUltimaConexion();
+
+      const usuario = this.usuario$.value;
+      if (usuario?.correo) {
+        this.actualizarEstadoDesconectado(usuario.correo);
+      }
+
       sessionStorage.removeItem('usuario');
       sessionStorage.removeItem('token');
       this.usuario$.next(null);
     }
+  }
+
+  guardarUltimaConexion() {
+    if (this.isBrowser) {
+      const ahora = new Date().toISOString();
+      sessionStorage.setItem('ultimaConexion', ahora);
+    }
+  }
+
+  getUltimaConexion(): string | null {
+    return this.isBrowser ? sessionStorage.getItem('ultimaConexion') : null;
+  }
+
+  actualizarEstadoEnLinea(correo: string): void {
+    const body = {
+      accion: 'actualizar-estado',
+      correo: correo,
+      estado: 'en linea'
+    };
+
+    const url = this.API_URL.includes('api.php') ? this.API_URL : `${this.API_URL}/estado`;
+
+    this.http.post<any>(url, body).subscribe({
+      next: () => console.log('✅ Estado actualizado: en línea'),
+      error: err => console.error('❌ Error al actualizar estado:', err)
+    });
+  }
+
+  actualizarEstadoDesconectado(correo: string): void {
+    const body = {
+      accion: 'actualizar-estado',
+      correo: correo,
+      estado: 'desconectado'
+    };
+
+    const url = this.API_URL.includes('api.php') ? this.API_URL : `${this.API_URL}/estado`;
+
+    this.http.post<any>(url, body).subscribe({
+      next: () => console.log('📴 Estado actualizado: desconectado'),
+      error: err => console.error('❌ Error al actualizar desconexión:', err)
+    });
   }
 }

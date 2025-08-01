@@ -133,18 +133,17 @@ app.post('/api/login', (req, res) => {
     return res.status(400).json({ mensaje: 'Correo y contraseña son obligatorios' });
   }
 
-  //const query = 'SELECT * FROM usuarios WHERE correo = ?';
   const query = `
-  SELECT 
-    CONCAT(
-      SUBSTRING_INDEX(nombre, ' ', 1), ' ',                             -- Primer nombre completo
-      UPPER(LEFT(SUBSTRING_INDEX(apellido, ' ', 1), 1)), '.'           -- Inicial del primer apellido
-    ) AS nombre,
-    correo,
-    contrasena,
-    id
-  FROM usuarios 
-  WHERE correo = ?`;
+    SELECT 
+      CONCAT(
+        SUBSTRING_INDEX(nombre, ' ', 1), ' ',
+        UPPER(LEFT(SUBSTRING_INDEX(apellido, ' ', 1), 1)), '.'
+      ) AS nombre,
+      correo,
+      contrasena,
+      id
+    FROM usuarios 
+    WHERE correo = ?`;
 
   connection.query(query, [correo], (err, results) => {
     if (err) {
@@ -162,29 +161,39 @@ app.post('/api/login', (req, res) => {
       return res.status(401).json({ mensaje: 'Contraseña incorrecta' });
     }
 
-    // 🔐 Generar token JWT
-    const token = jwt.sign(
-      {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        correo: usuario.correo
-      },
-      SECRET_KEY,
-      { expiresIn: '1h' } // 🔓 Token válido por 1 hora
-    );
-
-    // ✅ Respuesta con token
-    res.status(200).json({
-      mensaje: 'Inicio de sesión exitoso',
-      token,
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        correo: usuario.correo
+    // ✅ Registrar acceso en tabla accesos
+    const insertAccesoQuery = `INSERT INTO accesos (id_usuario) VALUES (?)`;
+    connection.query(insertAccesoQuery, [usuario.id], (err2) => {
+      if (err2) {
+        console.error('⚠️ Error al registrar acceso:', err2.message);
+        // Nota: no se corta el flujo, solo se registra el error
       }
+
+      // 🔐 Generar token JWT
+      const token = jwt.sign(
+        {
+          id: usuario.id,
+          nombre: usuario.nombre,
+          correo: usuario.correo
+        },
+        SECRET_KEY,
+        { expiresIn: '1h' }
+      );
+
+      // ✅ Respuesta con token y datos del usuario
+      res.status(200).json({
+        mensaje: 'Inicio de sesión exitoso',
+        token,
+        usuario: {
+          id: usuario.id,
+          nombre: usuario.nombre,
+          correo: usuario.correo
+        }
+      });
     });
   });
 });
+
 
 // ✅ Ruta para consultar el perfil completo
 app.get('/api/perfil/:id', (req, res) => {
@@ -255,10 +264,7 @@ function verificarToken(req, res, next) {
 // ✅ Ruta para listar todos los usuarios
 app.get('/api/usuarios', (req, res) => {
   const query = `
-    SELECT id, nombre, apellido, correo, tipo_documento, documento, 
-           DATE_FORMAT(fecha_registro, '%d/%m/%Y %H:%i:%s') AS fecha_registro, tipo_usuario
-    FROM usuarios
-    ORDER BY fecha_registro DESC
+    SELECT id, nombre, apellido, correo, tipo_usuario, en_linea, ultima_conexion FROM usuarios ORDER BY id;
   `;
 
   connection.query(query, (err, results) => {
@@ -270,6 +276,34 @@ app.get('/api/usuarios', (req, res) => {
     res.status(200).json(results);
   });
 });
+
+
+// Cambiar estado a EN LÍNEA
+// Ruta para actualizar estado (en línea o desconectado)
+app.post('/api/estado', (req, res) => {
+  const { correo, estado } = req.body;
+
+  if (!correo || !estado) {
+    return res.status(400).json({ mensaje: 'Faltan campos requeridos' });
+  }
+
+  const enLinea = estado === 'en linea' ? 1 : 0;
+
+  connection.query(
+    'UPDATE usuarios SET en_linea = ?, ultima_conexion = NOW() WHERE correo = ?',
+    [enLinea, correo],
+    (error, results) => {
+      if (error) {
+        console.error('❌ Error al actualizar estado:', error);
+        return res.status(500).json({ ok: false });
+      }
+
+      res.json({ ok: true, mensaje: `Estado actualizado a ${estado}` });
+    }
+  );
+});
+
+
 
 
 // a. script para el juego
