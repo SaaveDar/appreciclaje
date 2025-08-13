@@ -63,7 +63,7 @@
       </div>
 
       <div class="tabla-responsive">
-        <table class="tabla-usuarios">
+       <table class="tabla-usuarios">
           <thead>
             <tr>
               <th>ID</th>
@@ -71,6 +71,7 @@
               <th>Correo</th>
               <th>Tipo</th>
               <th>Ultimo acceso</th>
+              <th *ngIf="usuarioLogueado?.tipo_usuario === 'administrador'">Acción</th>
             </tr>
           </thead>
           <tbody>
@@ -79,7 +80,6 @@
               <td>{{ u.nombre + ' ' + u.apellido }}</td>
               <td>{{ u.correo }}</td>
               <td>{{ u.tipo_usuario }}</td>
-              <!--<td>{{ u.ultimo_acceso ? (u.ultimo_acceso | date: 'short') : 'Sin registro' }}</td>-->
               <td>
                 <span *ngIf="u.en_linea === 1">🟢 En línea</span>
                 <span *ngIf="u.en_linea === 0">
@@ -88,9 +88,26 @@
                   ({{ u.ultima_conexion ? obtenerTiempoTranscurrido(u.ultima_conexion) : '' }})
                 </span>
               </td>
-
-
-
+              <td *ngIf="usuarioLogueado?.tipo_usuario === 'administrador'">
+                <div class="permiso-actions">
+                  <button
+                    *ngIf="u.permiso_reciclaje !== 'activo'"
+                    (click)="otorgarPermisoReciclaje(u)"
+                  >
+                    Dar Permiso
+                  </button>
+                  
+                  <ng-container *ngIf="u.permiso_reciclaje === 'activo'">
+                    <span class="permiso-otorgado">Permiso Otorgado ✅</span>
+                    <button
+                      (click)="revocarPermisoReciclaje(u)"
+                      class="btn-revocar"
+                    >
+                      Revocar Permiso
+                    </button>
+                  </ng-container>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -223,6 +240,7 @@
               <th>Modalidad</th>
               <th>Incluye</th>
               <th>Estado</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody>
@@ -234,12 +252,43 @@
               <td>S/ {{ c.precio }}</td>
               <td>{{ c.modalidad }}</td>
               <td>{{ c.extra }}</td>
-              <td>{{ c.estado }}</td>
+              <td>
+                <span [ngStyle]="{'color': c.estado === 'activo' ? 'green' : 'red', 'font-weight': 'bold'}">
+                  {{ c.estado }}
+                </span>
+              </td>
+              <td><button (click)="editarCurso(c)">✏️ Editar</button></td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+  <dialog #modalEditarCurso>
+    <h3>✏️ Editar Curso</h3>
+    <form (submit)="guardarEdicion(); modalEditarCurso.close(); $event.preventDefault()">
+        <input type="text" placeholder="Nombre del curso" [(ngModel)]="cursoAEditar.nombre" name="nombre_edit" required>
+        <input type="text" placeholder="Duración (Ej: 4 semanas)" [(ngModel)]="cursoAEditar.duracion" name="duracion_edit" required>
+        <input type="text" placeholder="Horario (Ej: Lunes 7pm a 10pm)" [(ngModel)]="cursoAEditar.horario" name="horario_edit" required>
+        <input type="number"
+                placeholder="Precio (Ej: 100.00)"
+                [(ngModel)]="cursoAEditar.precio"
+                name="precio_edit"
+                required
+                min="1"
+                (input)="validarPrecioEdicion()">
+        <input type="text" placeholder="Modalidad (Ej:Presencial o Virtual)" [(ngModel)]="cursoAEditar.modalidad" name="modalidad_edit" required>
+        <input type="text" placeholder="Incluye (Ej: certificado)" [(ngModel)]="cursoAEditar.extra" name="extra_edit">
+        <select [(ngModel)]="cursoAEditar.estado" name="estado_edit">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+        </select>
+        <div>
+            <button type="submit">Guardar Cambios</button>
+            <button type="button" (click)="modalEditarCurso.close()">Cancelar</button>
+        </div>
+    </form>
+</dialog>
 
     <dialog #modalCurso>
       <h3>➕ Registrar Curso</h3>
@@ -258,8 +307,8 @@
 
         <input type="text" placeholder="Modalidad (Ej:Presencial o Virtual)" [(ngModel)]="nuevoCurso.modalidad" name="modalidad" required>
         <input type="text" placeholder="Incluye (Ej: certificado)" [(ngModel)]="nuevoCurso.extra" name="extra">
-        <select [(ngModel)]="nuevoCurso.estado" name="estado">
-          <option value="activo">Activo</option>
+        <select [(ngModel)]="nuevoCurso.estado" name="estado" disabled>
+          <option value="activo">Activo</option> 
           <option value="inactivo">Inactivo</option>
         </select>
         <div>
@@ -289,6 +338,15 @@
     </div>
   </div>
 </div>
+
+
+<dialog #modalPermiso>
+  <h3>{{ tituloModalPermiso }}</h3>
+  <p>{{ mensajePermiso }}</p>
+  <div>
+    <button (click)="modalPermiso.close()">Cerrar</button>
+  </div>
+</dialog>
 
 <!-- Solo el administrador ve el código QR -->
     <div *ngIf="tipoUsuario === 'administrador'" class="qr-container">

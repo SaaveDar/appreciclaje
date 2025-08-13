@@ -1,7 +1,10 @@
+// src/app/servicios/auth.service.ts
+
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, interval } from 'rxjs';
+import { HttpClient, HttpParams  } from '@angular/common/http';
+import { BehaviorSubject, Observable, interval, of } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +15,7 @@ export class AuthService {
 
   private readonly API_URL = this.isLocalhost()
     ? 'http://localhost:3000/api'
-    : 'https://comunidadvapps.com/api.php'; // Solo en producción con PHP
+    : 'https://comunidadvmapps.com/api.php';
 
   constructor(
     private http: HttpClient,
@@ -26,11 +29,9 @@ export class AuthService {
         const usuario = JSON.parse(usuarioGuardado);
         this.usuario$.next(usuario);
 
-        // ✅ Al recuperar el usuario, actualiza el estado a "en línea"
-        this.actualizarEstadoEnLinea(usuario.correo);
+        this.actualizarEstadoEnLinea(usuario.correo).subscribe();
       }
 
-      // Detecta cambios de sesión en otras pestañas
       interval(5000).subscribe(() => {
         const usuarioActual = sessionStorage.getItem('usuario');
         const usuarioParsed = usuarioActual ? JSON.parse(usuarioActual) : null;
@@ -50,7 +51,6 @@ export class AuthService {
     const url = this.isLocalhost()
       ? `${this.API_URL}/registrar`
       : `${this.API_URL}?consulta=registrar`;
-
     return this.http.post(url, data);
   }
 
@@ -59,7 +59,29 @@ export class AuthService {
       ? `${this.API_URL}/login`
       : `${this.API_URL}?consulta=login`;
 
-    return this.http.post(url, data);
+    return new Observable(observer => {
+      this.http.post<any>(url, data).subscribe({
+        next: (response) => {
+          if (response.usuario) {
+            sessionStorage.setItem('usuario', JSON.stringify(response.usuario));
+            sessionStorage.setItem('token', response.token);
+            this.usuario$.next(response.usuario);
+
+            this.actualizarEstadoEnLinea(response.usuario.correo).subscribe(() => {
+              const usuarioActualizado = { ...response.usuario, en_linea: 1 };
+              this.usuario$.next(usuarioActualizado);
+              observer.next(response);
+              observer.complete();
+            });
+          } else {
+            observer.error('Respuesta de login inválida');
+          }
+        },
+        error: (err) => {
+          observer.error(err);
+        }
+      });
+    });
   }
 
   guardarToken(token: string) {
@@ -77,9 +99,8 @@ export class AuthService {
       sessionStorage.setItem('usuario', JSON.stringify(usuario));
       this.usuario$.next(usuario);
 
-      // ✅ Actualiza el estado a "en línea" también cuando se actualiza manualmente
       if (usuario?.correo) {
-        this.actualizarEstadoEnLinea(usuario.correo);
+        this.actualizarEstadoEnLinea(usuario.correo).subscribe();
       }
     }
   }
@@ -90,7 +111,7 @@ export class AuthService {
 
       const usuario = this.usuario$.value;
       if (usuario?.correo) {
-        this.actualizarEstadoDesconectado(usuario.correo);
+        this.actualizarEstadoDesconectado(usuario.correo).subscribe();
       }
 
       sessionStorage.removeItem('usuario');
@@ -110,33 +131,72 @@ export class AuthService {
     return this.isBrowser ? sessionStorage.getItem('ultimaConexion') : null;
   }
 
-  actualizarEstadoEnLinea(correo: string): void {
+  // ✅ CORREGIDO: Ahora devuelve el Observable para que el componente se suscriba
+  actualizarEstadoEnLinea(correo: string): Observable<any> {
     const body = {
-      accion: 'actualizar-estado',
       correo: correo,
       estado: 'en linea'
     };
 
-    const url = this.API_URL.includes('api.php') ? this.API_URL : `${this.API_URL}/estado`;
+    const url = this.API_URL.includes('api.php')
+      ? `${this.API_URL}?consulta=actualizar-estado`
+      : `${this.API_URL}/estado`;
 
-    this.http.post<any>(url, body).subscribe({
-      next: () => console.log('✅ Estado actualizado: en línea'),
-      error: err => console.error('❌ Error al actualizar estado:', err)
-    });
+    return this.http.post<any>(url, body).pipe(
+      tap(() => console.log('✅ Estado actualizado: en línea')),
+      catchError(err => {
+        console.error('❌ Error al actualizar estado:', err);
+        return of(null);
+      })
+    );
   }
 
-  actualizarEstadoDesconectado(correo: string): void {
+  // ✅ CORREGIDO: Ahora devuelve el Observable para que el componente se suscriba
+  actualizarEstadoDesconectado(correo: string): Observable<any> {
     const body = {
-      accion: 'actualizar-estado',
       correo: correo,
       estado: 'desconectado'
     };
 
-    const url = this.API_URL.includes('api.php') ? this.API_URL : `${this.API_URL}/estado`;
+    const url = this.API_URL.includes('api.php')
+      ? `${this.API_URL}?consulta=actualizar-estado`
+      : `${this.API_URL}/estado`;
 
-    this.http.post<any>(url, body).subscribe({
-      next: () => console.log('📴 Estado actualizado: desconectado'),
-      error: err => console.error('❌ Error al actualizar desconexión:', err)
-    });
+    return this.http.post<any>(url, body).pipe(
+      tap(() => console.log('📴 Estado actualizado: desconectado')),
+      catchError(err => {
+        console.error('❌ Error al actualizar desconexión:', err);
+        return of(null);
+      })
+    );
   }
+
+ cambiarContrasena(data: { id_usuario: number, nueva_contrasena: string }): Observable<any> {
+  const url = this.isLocalhost()
+    ? `${this.API_URL}/cambiar-contrasena` // Node.js en localhost
+    : `${this.API_URL}?consulta=cambiar-contrasena`; // api.php en Producción
+
+  return this.http.post<any>(url, data).pipe(
+    tap(() => console.log('🔒 Contraseña actualizada en backend')),
+    catchError(err => {
+      console.error('❌ Error al cambiar contraseña:', err);
+      return of(null);
+    })
+  );
+}
+
+solicitarRecuperacion(correo: string): Observable<any> {
+  const url = this.API_URL.includes('api.php')
+    ? `${this.API_URL}?consulta=recuperar-contrasena`
+    : `${this.API_URL}/recuperar-contrasena`;
+
+  // Change the body to a JSON object
+  const body = { correo: correo };
+
+  // Remove the custom Content-Type header as Angular sets 'application/json' by default
+  return this.http.post<any>(url, body);
+}
+
+
+
 }

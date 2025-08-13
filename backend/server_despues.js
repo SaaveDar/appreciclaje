@@ -14,7 +14,7 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } }); // ✅ CORS para WebSocket
 
 const PORT = 3000;
-const API_URL = 'https://comunidadvapps.com/api.php'; // URL de tu API PHP en CPanel
+const API_URL = 'https://comunidadvmapps.com/api.php'; // URL de tu API PHP en CPanel
 
 app.use(cors()); // ✅ Habilitar CORS para Express HTTP
 app.use(express.json()); // ✅ Para parsear JSON en las solicitudes

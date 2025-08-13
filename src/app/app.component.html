@@ -36,7 +36,9 @@
 
         <!-- Menú desplegable del usuario (Cambiar contraseña, Cerrar sesión) -->
         <div class="menu-usuario" *ngIf="menuVisible">
-           <button class="btn-opcion" (click)="irAPerfil()">Mi perfil</button>
+          <button class="btn-opcion" (click)="irAPerfil()">Mi perfil</button>
+          <button class="btn-opcion" (click)="irACursos()">Cursos</button> <!-- NUEVO BOTÓN -->
+          <button class="btn-opcion" (click)="irAHistorial()">Historial de Reciclaje</button> <!-- NUEVO BOTÓN -->
           <button class="btn-opcion" (click)="cambiarContrasena()">Cambiar contraseña</button>
           <button class="btn-opcion cerrar" (click)="cerrarSesion()">Cerrar sesión</button>
         </div>
@@ -44,6 +46,29 @@
     </ng-template>
   </div>
 </nav>
+
+<!-- Modal Cambiar Contraseña -->
+<div class="modal-cambiar-contrasena" *ngIf="mostrarModalCambiarClave">
+  <div class="modal-content">
+    <h2>Cambiar Contraseña</h2>
+    <div class="campo-usuario-logueado">
+      <label>Correo actual</label>
+      <input type="email" [value]="usuarioLogueado?.correo" disabled>
+    </div>
+
+    <input type="password" [(ngModel)]="nuevaContrasena" placeholder="Nueva Contraseña">
+    <input type="password" [(ngModel)]="confirmarContrasena" placeholder="Confirmar Contraseña">
+    <div [ngClass]="mensajeErrorClave.includes('✅') ? 'mensaje-exito' : 'mensaje-error'" *ngIf="mensajeErrorClave">
+      {{ mensajeErrorClave }}
+    </div>
+
+    <div class="acciones">
+      <button (click)="guardarNuevaContrasena()">Guardar</button>
+      <button (click)="cerrarModalCambiarClave()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- Sidebar solo en móviles -->
 <nav class="sidebar" [class.open]="sidebarOpen">
@@ -81,7 +106,9 @@
 
           <!-- 🔽 Submenú del usuario en el sidebar -->
           <div class="submenu-opciones" *ngIf="menuVisibleSidebar">
-             <button class="btn-opcion" (click)="irAPerfil()">Mi perfil</button>
+            <button class="btn-opcion" (click)="irAPerfil()">Mi perfil</button>
+            <button class="btn-opcion" (click)="irACursos()">Cursos</button> <!-- NUEVO BOTÓN -->
+            <button class="btn-opcion" (click)="irAHistorial()">Historial de Reciclaje</button> <!-- NUEVO BOTÓN -->
             <button class="btn-opcion" (click)="cambiarContrasena()">Cambiar contraseña</button>
             <button class="btn-opcion cerrar" (click)="cerrarSesion()">Cerrar sesión</button>
           </div>
@@ -120,6 +147,11 @@
 
       <button type="submit" class="btn-ingresar">Ingresar</button>
       
+      <p class="opciones">
+        <a href="#" (click)="abrirModalRecuperacion(); $event.preventDefault()">
+          ¿Olvidaste la contraseña?
+        </a>
+      </p>
     </form>
 
     <!-- Formulario de Registro -->
@@ -227,6 +259,25 @@
 </div>
 
 
+<div class="modal-recuperacion" *ngIf="mostrarModalRecuperacion">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Recuperar Contraseña</h5>
+      <button type="button" class="btn-close" (click)="cerrarModalRecuperacion()">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Introduce tu correo electrónico para restaurar tu contraseña.</p>
+      <input type="email" [(ngModel)]="correoRecuperacion" placeholder="Correo electrónico" required>
+      <p class="mensaje-error" *ngIf="mensajeErrorRecuperacion">
+        {{ mensajeErrorRecuperacion }}
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-primary" (click)="enviarCorreoRecuperacion()">Enviar correo</button>
+      <button type="button" class="btn-secondary" (click)="cerrarModalRecuperacion()">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 
 <!-- Footer de la aplicación -->

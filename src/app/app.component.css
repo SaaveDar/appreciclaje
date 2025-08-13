@@ -742,3 +742,292 @@ input[type="date"]#fechaNacimiento:focus {
   0%   { opacity: 0; transform: translateX(-50%) translateY(-10px); }
   100% { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+
+/* MODAL DE CAMBIAR contraseña */
+
+
+/* Fondo oscuro difuminado */
+.modal-cambiar-contrasena {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Contenedor del modal */
+.modal-content {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: slideUp 0.4s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Título */
+.modal-content h2 {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  color: #2e7d32; /* Verde eco */
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Inputs */
+.modal-content input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  margin: 0.5rem 0;
+  border: 1px solid #c8e6c9;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.modal-content input:focus {
+  border-color: #66bb6a;
+  outline: none;
+}
+
+/* Mensaje de error */
+.mensaje-exito {
+  color: green; /* o usa #4CAF50 */
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.mensaje-error {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+
+/* Botones */
+.modal-content .acciones {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.modal-content .acciones button {
+  flex: 1;
+  margin: 0 0.5rem;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.modal-content .acciones button:first-child {
+  background-color: #43a047;
+  color: white;
+}
+
+.modal-content .acciones button:last-child {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.modal-content .acciones button:hover {
+  transform: translateY(-2px);
+}
+
+.modal-content .acciones button:first-child:hover {
+  background-color: #388e3c;
+}
+
+.modal-content .acciones button:last-child:hover {
+  background-color: #bdbdbd;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive (opcional pero recomendado) */
+@media (max-width: 420px) {
+  .modal-content {
+    padding: 1rem;
+    max-width: 90%;
+  }
+}
+
+
+
+/* Estilos para el modal de recuperación */
+.modal-recuperacion {
+  /* Fondo oscuro semitransparente que cubre toda la pantalla */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Asegura que el modal esté por encima de todo */
+  backdrop-filter: blur(5px); /* Efecto de desenfoque en el fondo */
+  animation: fadeIn 0.3s ease-out; /* Animación de entrada */
+}
+
+/* Contenido del modal */
+.modal-recuperacion .modal-content {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 450px;
+  padding: 25px;
+  position: relative;
+  transform: scale(0.9); /* Escala inicial para la animación */
+  animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.9); opacity: 0.8; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Estilos para los elementos del modal */
+.modal-recuperacion .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-recuperacion .modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.modal-recuperacion .btn-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal-recuperacion .btn-close:hover {
+  color: #555;
+}
+
+.modal-recuperacion .modal-body p {
+  margin-bottom: 15px;
+  font-size: 1rem;
+  color: #666;
+}
+
+.modal-recuperacion .modal-body input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.modal-recuperacion .modal-body input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.modal-recuperacion .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-recuperacion .btn-primary, .modal-recuperacion .btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.modal-recuperacion .btn-primary {
+  background-color: #007bff;
+  color: #fff;
+  transition: background-color 0.2s;
+}
+
+.modal-recuperacion .btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.modal-recuperacion .btn-secondary {
+  background-color: #6c757d;
+  color: #fff;
+  transition: background-color 0.2s;
+}
+
+.modal-recuperacion .btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.modal-recuperacion .mensaje-error {
+  color: red;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* Nuevo estilo para el enlace de recuperación de contraseña */
+.opciones .enlace-recuperacion {
+  color: #6495ED; /* Azul celeste profesional */
+  text-decoration: none;
+  font-size: 0.8rem; /* Letra más pequeña */
+  font-weight: 700; /* Estilo de negrita */
+  transition: color 0.3s ease;
+  padding: 5px 0;
+}
+
+/* Efecto al pasar el cursor (hover) */
+.opciones .enlace-recuperacion:hover {
+  color: #4682B4; /* Un azul de acero para el hover */
+  text-decoration: underline;
+}
+
+/* Ajustes de tipografía y espaciado para el contenedor */
+.opciones {
+  text-align: center;
+  margin-top: 15px;
+}

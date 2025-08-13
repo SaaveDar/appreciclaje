@@ -9,6 +9,13 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const connection = require('./db');
+const multer = require('multer');
+
+// Ruta para cambiar contraseña
+const bcrypt = require('bcrypt');
+// ⚠️ Mueve la importación de crypto aquí, al inicio del archivo
+const crypto = require('crypto'); 
+const nodemailer = require('nodemailer');
 
 const app = express();
 const server = http.createServer(app);
@@ -18,10 +25,13 @@ const io = new Server(server, {
   }
 });
 
+
 const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // <-- ¡Añade esta línea!
+const upload = multer(); // <-- ¡Añade esta línea!
 
 // ✅ Ruta de prueba: para consultar
 app.get('/api/tipos-residuos', (req, res) => {
@@ -138,7 +148,7 @@ app.post('/api/login', (req, res) => {
       CONCAT(
         SUBSTRING_INDEX(nombre, ' ', 1), ' ',
         UPPER(LEFT(SUBSTRING_INDEX(apellido, ' ', 1), 1)), '.'
-      ) AS nombre,
+      ) AS nombre, tipo_usuario,
       correo,
       contrasena,
       id
@@ -157,43 +167,204 @@ app.post('/api/login', (req, res) => {
 
     const usuario = results[0];
 
-    if (usuario.contrasena !== contrasena) {
-      return res.status(401).json({ mensaje: 'Contraseña incorrecta' });
-    }
-
-    // ✅ Registrar acceso en tabla accesos
-    const insertAccesoQuery = `INSERT INTO accesos (id_usuario) VALUES (?)`;
-    connection.query(insertAccesoQuery, [usuario.id], (err2) => {
-      if (err2) {
-        console.error('⚠️ Error al registrar acceso:', err2.message);
-        // Nota: no se corta el flujo, solo se registra el error
+    // 🔒 Comparar contraseñas con bcrypt.compare
+    bcrypt.compare(contrasena, usuario.contrasena, (errCompare, isMatch) => {
+      if (errCompare) {
+        console.error('❌ Error al comparar contraseñas:', errCompare);
+        return res.status(500).json({ mensaje: 'Error al validar contraseña' });
       }
 
-      // 🔐 Generar token JWT
-      const token = jwt.sign(
-        {
-          id: usuario.id,
-          nombre: usuario.nombre,
-          correo: usuario.correo
-        },
-        SECRET_KEY,
-        { expiresIn: '1h' }
-      );
+      if (!isMatch) {
+        return res.status(401).json({ mensaje: 'Contraseña incorrecta' });
+      }
 
-      // ✅ Respuesta con token y datos del usuario
-      res.status(200).json({
-        mensaje: 'Inicio de sesión exitoso',
-        token,
-        usuario: {
-          id: usuario.id,
-          nombre: usuario.nombre,
-          correo: usuario.correo
+      // ✅ Registrar acceso en tabla accesos
+      const insertAccesoQuery = `INSERT INTO accesos (id_usuario) VALUES (?)`;
+      connection.query(insertAccesoQuery, [usuario.id], (err2) => {
+        if (err2) {
+          console.error('⚠️ Error al registrar acceso:', err2.message);
+          // Nota: no se corta el flujo, solo se registra el error
         }
+
+        // 🔐 Generar token JWT
+        const token = jwt.sign(
+          {
+            id: usuario.id,
+            nombre: usuario.nombre,
+            correo: usuario.correo
+          },
+          SECRET_KEY,
+          { expiresIn: '1h' }
+        );
+
+        // ✅ Respuesta con token y datos del usuario
+        res.status(200).json({
+          mensaje: 'Inicio de sesión exitoso',
+          token,
+          usuario: {
+            id: usuario.id,
+            nombre: usuario.nombre,
+            correo: usuario.correo,
+            tipo_usuario: usuario.tipo_usuario  // <-- 🔥 IMPORTANTE 🔥
+          }
+        });
       });
     });
   });
 });
 
+
+
+app.post('/api/cambiar-contrasena', (req, res) => {
+  const { id_usuario, nueva_contrasena } = req.body;
+
+  if (!id_usuario || !nueva_contrasena) {
+    return res.status(400).json({ mensaje: 'Faltan campos requeridos' });
+  }
+
+  bcrypt.hash(nueva_contrasena, 10, (err, hash) => {
+    if (err) {
+      console.error('❌ Error al encriptar contraseña:', err);
+      return res.status(500).json({ mensaje: 'Error interno al encriptar' });
+    }
+
+    const sql = 'UPDATE usuarios SET contrasena = ? WHERE id = ?';
+    connection.query(sql, [hash, id_usuario], (error, result) => {
+      if (error) {
+        console.error('❌ Error al actualizar contraseña:', error);
+        return res.status(500).json({ mensaje: 'Error al actualizar contraseña' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+      }
+
+      return res.status(200).json({ mensaje: '✅ Contraseña actualizada correctamente' });
+    });
+  });
+});
+
+// listar cursos por id logueado
+
+app.post('/api/listar-cursos_id', (req, res) => {
+  const { correo } = req.body;
+
+  if (!correo) {
+    return res.status(400).json({ mensaje: "El correo es obligatorio" });
+  }
+
+  const query = `
+    SELECT c.nombre, c.duracion, c.horario, c.precio, c.modalidad, c.extra, c.id, cj.curso_id,
+            s.id_sesion, s.sesion, s.subtitulo, s.descripcion, s.contenido, s.url_imagen, s.video, s.orden
+    FROM cursos c
+    INNER JOIN cursos_canjeados cj ON cj.curso_id = c.id
+    INNER JOIN usuarios u ON u.id = cj.usuario_id
+    LEFT JOIN sesion_cursos s ON s.id_curso = c.id
+    WHERE u.correo = ? and c.estado = 'activo'
+    ORDER BY s.id_sesion ASC
+  `;
+
+  connection.query(query, [correo], (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener cursos canjeados:", err);
+      return res.status(500).json({ mensaje: "Error al consultar cursos", error: err });
+    }
+
+    res.json(results);
+  });
+});
+
+
+// listar cursos PARA ADMINISTRADOR Y DOCENTE
+
+app.get('/api/listar-todos-los-cursos', (req, res) => {
+  const query = `
+    SELECT c.id, c.nombre, c.duracion, c.horario, c.precio, c.modalidad, c.extra, 
+           s.id_sesion AS id_sesion, s.sesion, s.subtitulo, s.descripcion, s.contenido, s.url_imagen, s.video, s.orden
+    FROM cursos c
+    LEFT JOIN sesion_cursos s ON c.id = s.id_curso
+
+    ORDER BY c.id, s.id_sesion
+  `;
+  //     WHERE c.estado = 'activo'
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Error al obtener cursos:", err);
+      return res.status(500).json({ mensaje: "Error al consultar cursos", error: err });
+    }
+
+    res.json(results);
+  });
+});
+
+// Ruta: Registrar Sesión (POST)
+app.post('/api/registrar-sesion', (req, res) => {
+  const { id_curso, sesion, subtitulo, descripcion, contenido, url_imagen, video, estado } = req.body;
+
+  // Primero, consulta el último valor de 'orden' para el id_curso dado.
+  const queryConsultaOrden = `
+    SELECT MAX(orden) as max_orden
+    FROM sesion_cursos
+    WHERE id_curso = ?
+  `;
+
+  connection.query(queryConsultaOrden, [id_curso], (err, results) => {
+    if (err) {
+      console.error('❌ Error al consultar la secuencia de orden:', err);
+      return res.status(500).json({ mensaje: 'Error al consultar la secuencia de orden', error: err });
+    }
+
+    let nuevoOrden = 1;
+    if (results.length > 0 && results[0].max_orden !== null) {
+      // Si ya existen sesiones para este curso, el nuevo orden es el máximo + 1.
+      nuevoOrden = results[0].max_orden + 1;
+    }
+    // Si no existen sesiones, nuevoOrden se mantiene en 1.
+
+    const queryInsertarSesion = `
+      INSERT INTO sesion_cursos (id_curso, sesion, subtitulo, descripcion, contenido, url_imagen, video, estado, orden)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    connection.query(
+      queryInsertarSesion,
+      [id_curso, sesion, subtitulo, descripcion, contenido, url_imagen, video, estado, nuevoOrden],
+      (err, result) => {
+        if (err) {
+          console.error('❌ Error al registrar la sesión:', err);
+          return res.status(500).json({ mensaje: 'Error al registrar sesión', error: err });
+        }
+
+        res.json({ mensaje: '✅ Sesión registrada correctamente', idInsertado: result.insertId, nuevoOrden: nuevoOrden });
+      }
+    );
+  });
+});
+
+// Ruta: Editar Sesión (POST)
+app.post('/api/editar-sesion', (req, res) => {
+  const { id_sesion, sesion, subtitulo, descripcion, contenido, url_imagen, video } = req.body;
+
+  const query = `
+    UPDATE sesion_cursos
+    SET sesion = ?, subtitulo = ?, descripcion = ?, contenido = ?, url_imagen = ?, video = ?
+    WHERE id_sesion = ?
+  `;
+
+  connection.query(query, [sesion, subtitulo, descripcion, contenido, url_imagen, video, id_sesion], (err, result) => {
+    if (err) {
+      console.error('❌ Error al actualizar la sesión:', err);
+      return res.status(500).json({ mensaje: 'Error al actualizar sesión', error: err });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ mensaje: 'Sesión no encontrada' });
+    }
+
+    res.json({ mensaje: '✅ Sesión actualizada correctamente' });
+  });
+});
 
 // ✅ Ruta para consultar el perfil completo
 app.get('/api/perfil/:id', (req, res) => {
@@ -218,6 +389,71 @@ app.get('/api/perfil/:id', (req, res) => {
     res.status(200).json(results[0]);
   });
 });
+
+
+
+// Ruta para solicitar la recuperación de contraseña
+app.post('/api/recuperar-contrasena', (req, res) => {
+    const { correo } = req.body;
+
+    const query = 'SELECT id, nombre, correo FROM usuarios WHERE correo = ?';
+    connection.query(query, [correo], async (err, results) => {
+        if (err) return res.status(500).json({ mensaje: 'Error en la consulta', error: err.message });
+
+        // Si el correo no existe, devuelve un mensaje genérico por seguridad
+        if (results.length === 0) {
+            return res.status(200).json({ mensaje: 'Si el correo existe, se ha enviado una nueva contraseña.' });
+        }
+
+        const usuario = results[0];
+
+        // Generar nueva contraseña temporal
+        const nuevaContrasena = Math.random().toString(36).slice(-8); // 8 caracteres
+        const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+
+        // Calcular expiración (24 horas desde ahora)
+        const fechaExpiracion = new Date();
+        //fechaExpiracion.setHours(fechaExpiracion.getHours() + 24); // 24 horas
+        fechaExpiracion.setMinutes(fechaExpiracion.getMinutes() + 5);  // 5 mminutos
+
+        // Guardar nueva contraseña y fecha de expiración en la BD
+        connection.query(
+            'UPDATE usuarios SET contrasena = ?, contrasena_expira = ? WHERE id = ?',
+            [hashedPassword, fechaExpiracion, usuario.id],
+            (updateErr) => {
+                if (updateErr) return res.status(500).json({ mensaje: 'Error al actualizar la contraseña', error: updateErr.message });
+
+                // Configuración de envío de correo
+                const transporter = nodemailer.createTransport({
+                    service: 'Gmail',
+                    auth: { user: 'darleysaavedra@gmail.com', pass: 'rqvhgxpupeivbeff' } // sin espacios en pass
+                });
+
+                const mailOptions = {
+                    to: usuario.correo,
+                    from: 'darleysaavedra@gmail.com',
+                    subject: 'Recuperación de Contraseña - ECORECICLA',
+                    html: `<h3>Hola, ${usuario.nombre}</h3>
+                           <p>Tu nueva contraseña temporal es:</p>
+                           <h2>${nuevaContrasena}</h2>
+                           <p>Esta contraseña expirará el <b>${fechaExpiracion.toLocaleString()}</b>.</p>
+                           <p>Por favor, cámbiala después de iniciar sesión.</p>`
+                };
+
+                transporter.sendMail(mailOptions, (mailErr, info) => {
+                    if (mailErr) {
+                        console.error('❌ Error al enviar el correo:', mailErr);
+                        return res.status(500).json({ mensaje: 'Error al enviar el correo de recuperación.' });
+                    }
+
+                    console.log('✅ Correo enviado:', info.response);
+                    return res.status(200).json({ mensaje: 'Si el correo existe, se ha enviado una nueva contraseña.' });
+                });
+            }
+        );
+    });
+});
+
 
 // Obtener progreso del usuario desde la tabla proceso_juego
 app.get('/api/progreso/:id', (req, res) => {
@@ -264,7 +500,7 @@ function verificarToken(req, res, next) {
 // ✅ Ruta para listar todos los usuarios
 app.get('/api/usuarios', (req, res) => {
   const query = `
-    SELECT id, nombre, apellido, correo, tipo_usuario, en_linea, ultima_conexion FROM usuarios ORDER BY id;
+    SELECT id, nombre, apellido, correo, tipo_usuario, en_linea, ultima_conexion, permiso_reciclaje  FROM usuarios ORDER BY id;
   `;
 
   connection.query(query, (err, results) => {
@@ -280,7 +516,8 @@ app.get('/api/usuarios', (req, res) => {
 
 // Cambiar estado a EN LÍNEA
 // Ruta para actualizar estado (en línea o desconectado)
-app.post('/api/estado', (req, res) => {
+app.post('/api/estado', upload.none(), (req, res) => {
+  console.log('Request body received:', req.body); // Check the log here
   const { correo, estado } = req.body;
 
   if (!correo || !estado) {
@@ -369,7 +606,7 @@ app.get('/api/progreso/:usuario_id', (req, res) => {
 
 // 🔍 Listar cursos
 app.get('/api/cursos', (req, res) => {
-  const query = 'SELECT * FROM cursos WHERE estado = "activo"';
+  const query = 'SELECT * FROM cursos ';
   connection.query(query, (err, results) => {
     if (err) {
       console.error('❌ Error al obtener cursos:', err.message);
@@ -401,6 +638,37 @@ app.post('/api/cursos', (req, res) => {
     res.status(201).json({ mensaje: '✅ Curso registrado correctamente', id: result.insertId });
   });
 });
+
+
+// ✏️ Ruta para editar un curso (nueva)
+app.put('/api/cursos/:id', (req, res) => {
+  const { id } = req.params;
+  const { nombre, duracion, horario, precio, modalidad, extra, estado } = req.body;
+
+  if (!id || !nombre || !duracion || !horario || !precio || !modalidad || !estado) {
+    return res.status(400).json({ error: '⚠️ Faltan datos obligatorios para la edición' });
+  }
+
+  const query = `
+    UPDATE cursos 
+    SET nombre = ?, duracion = ?, horario = ?, precio = ?, modalidad = ?, extra = ?, estado = ?
+    WHERE id = ?
+  `;
+
+  connection.query(query, [nombre, duracion, horario, precio, modalidad, extra, estado, id], (err, result) => {
+    if (err) {
+      console.error('❌ Error al actualizar el curso:', err.message);
+      return res.status(500).json({ error: 'Error al actualizar curso', detalle: err.message });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ mensaje: 'Curso no encontrado' });
+    }
+
+    res.status(200).json({ mensaje: '✅ Curso editado con éxito' });
+  });
+});
+
 
 // REGISTRRAR EL CANJE DE CURSOS
 app.post('/api/canjear-curso', (req, res) => {
@@ -542,7 +810,76 @@ app.get('/api/protegido', verificarToken, (req, res) => {
   res.json({ mensaje: '🔐 Ruta protegida accedida', usuario: req.usuario });
 });
 
+/* --- Nuevas rutas para el Historial de Reciclaje --- */
 
+// [NUEVA RUTA] Registrar un nuevo historial de reciclaje
+app.post('/api/registrar-reciclaje', upload.single('foto'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ mensaje: 'No se subió ninguna foto.' });
+    }
+
+    const { usuario_id, categoria, residuo, peso_kg } = req.body;
+    const foto_url = `/uploads/${req.file.filename}`; // Guarda la ruta del archivo
+
+    if (!usuario_id || !categoria || !residuo || !peso_kg || !foto_url) {
+        return res.status(400).json({ mensaje: 'Faltan campos obligatorios.' });
+    }
+
+    const query = 'INSERT INTO historial_reciclaje (usuario_id, categoria, residuo, peso_kg, foto_url) VALUES (?, ?, ?, ?, ?)';
+    connection.query(query, [usuario_id, categoria, residuo, peso_kg, foto_url], (err, results) => {
+        if (err) {
+            console.error('Error al insertar en la base de datos:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ mensaje: 'Registro de reciclaje creado con éxito.', id: results.insertId });
+    });
+});
+
+// [NUEVA RUTA] Obtener el historial de reciclaje de un usuario
+app.get('/api/historial-reciclaje/:id', (req, res) => {
+    const usuario_id = req.params.id;
+    const query = 'SELECT * FROM historial_reciclaje WHERE usuario_id = ? ORDER BY fecha DESC';
+    connection.query(query, [usuario_id], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(results);
+    });
+});
+
+// [NUEVA RUTA] Obtener el permiso de reciclaje de un usuario
+app.get('/api/permiso-reciclaje/:id', (req, res) => {
+    const usuario_id = req.params.id;
+    const query = 'SELECT permiso_reciclaje FROM usuarios WHERE id = ?';
+    connection.query(query, [usuario_id], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+        }
+        res.json({ estado: results[0].permiso_reciclaje });
+    });
+});
+
+// [NUEVA RUTA] Actualizar el permiso de reciclaje de un usuario (Solo para administradores)
+app.post('/api/actualizar-permiso-reciclaje', (req, res) => {
+    const { usuario_id, estado } = req.body;
+    if (!usuario_id || !estado) {
+        return res.status(400).json({ mensaje: 'ID de usuario y estado son obligatorios.' });
+    }
+
+    const query = 'UPDATE usuarios SET permiso_reciclaje = ? WHERE id = ?';
+    connection.query(query, [estado, usuario_id], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+        }
+        res.json({ mensaje: 'Permiso de reciclaje actualizado con éxito.' });
+    });
+});
 
 
 // 🚀 Iniciar servidor

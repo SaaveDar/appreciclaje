@@ -3,6 +3,20 @@ DROP DATABASE IF EXISTS reciclaje_inteligente;
 CREATE DATABASE reciclaje_inteligente;
 USE reciclaje_inteligente;
 
+
+CREATE TABLE historial_reciclaje (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    categoria VARCHAR(50) NOT NULL,
+    residuo VARCHAR(100) NOT NULL,
+    peso_kg DECIMAL(10, 2) NOT NULL,
+    foto_url VARCHAR(255) NOT NULL,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    permiso_admin ENUM('pendiente', 'aprobado', 'denegado') DEFAULT 'pendiente',
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+
 -- Tabla: usuarios
 CREATE TABLE usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,6 +35,8 @@ CREATE TABLE usuarios (
 
 ALTER TABLE usuarios ADD COLUMN en_linea TINYINT(1) DEFAULT 0;
 ALTER TABLE usuarios ADD COLUMN ultima_conexion DATETIME;
+-- Add a new column to the `usuarios` table to manage the permission to register new entries.
+ALTER TABLE usuarios ADD COLUMN permiso_reciclaje ENUM('activo', 'inactivo') DEFAULT 'inactivo';
 
 /*
 ALTER TABLE usuarios
@@ -169,3 +185,39 @@ INSERT INTO `tipos_residuos` VALUES
 INSERT INTO puntos_reciclaje (nombre, direccion, latitud, longitud, horario, tipos_residuos_admitidos, telefono_contacto) VALUES
 ('Punto Verde Central', 'Parque Central - Lima', -12.0464, -77.0428, 'Lun a Sab: 8am - 5pm', '1,2,3', '987654321'),
 ('Eco Estación Norte', 'Av. Ecológica 234', -12.0545, -77.0900, 'Lun a Dom: 9am - 6pm', '1,4,5', '912345678');
+
+
+CREATE TABLE sesion_cursos (
+    id_sesion INT AUTO_INCREMENT PRIMARY KEY,
+    id_curso INT, 
+    sesion VARCHAR(100) NOT NULL,
+    subtitulo VARCHAR(150),
+    descripcion TEXT,
+    contenido TEXT,
+    url_imagen VARCHAR(255),
+    url VARCHAR(255),
+    video VARCHAR(255),
+    estado TINYINT(1) DEFAULT 1
+);
+
+ALTER TABLE sesion_cursos
+ADD COLUMN orden INT AFTER video;
+
+
+INSERT INTO sesion_cursos (id_curso, sesion, subtitulo, descripcion, contenido, url_imagen, url, video, estado)
+VALUES (
+    '1',
+    'Sesion 1',
+    'Introducción a la Gestión Ambiental',
+    'Curso enfocado en la comprensión de la gestión ambiental y su importancia para el desarrollo sostenible.',
+    'Módulo 1: Conceptos básicos de medio ambiente. Módulo 2: Legislación ambiental. Módulo 3: Buenas prácticas ambientales en empresas y comunidades.',
+    'https://tusitio.com/assets/images/gestion_ambiental.jpg',
+    'https://tusitio.com/cursos/gestion-ambiental',
+    'https://tusitio.com/videos/gestion_ambiental_intro.mp4',
+    1,1
+);
+INSERT INTO sesion_cursos (id_curso, sesion, subtitulo, descripcion, contenido, url_imagen, url, video, estado) VALUES
+('1', 'Sesion 2', 'Impacto Ambiental de las Actividades Humanas', 'Analiza cómo las actividades diarias afectan al medio ambiente y cómo podemos mitigar esos impactos.', 'Módulo 1: Contaminación del aire. Módulo 2: Contaminación del agua. Módulo 3: Efecto invernadero y cambio climático.', 'https://tusitio.com/assets/images/impacto_ambiental.jpg', 'https://tusitio.com/cursos/gestion-ambiental/sesion-2', 'https://tusitio.com/videos/impacto_ambiental.mp4', 1,1),
+
+('1', 'Sesion 3', 'Gestión de Residuos Sólidos', 'Explora técnicas de manejo adecuado de residuos sólidos en empresas y hogares.', 'Módulo 1: Clasificación de residuos. Módulo 2: Procesos de reciclaje industrial. Módulo 3: Programas de reducción de residuos.', 'https://tusitio.com/assets/images/gestion_residuos.jpg', 'https://tusitio.com/cursos/gestion-ambiental/sesion-3', 'https://tusitio.com/videos/gestion_residuos.mp4', 1,1);
+

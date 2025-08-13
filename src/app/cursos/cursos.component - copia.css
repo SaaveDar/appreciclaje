@@ -1,0 +1,414 @@
+/* ------------------- ESTILOS GENERALES Y BASE ------------------- */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  height: 100vh;
+  background: #f4f6f8;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-container {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+/* ------------------- BARRA LATERAL (SIDEBAR) ------------------- */
+.sidebar {
+  width: 260px;
+  min-width: 200px;
+  background: #1f1f1f;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+  overflow-y: auto;
+  transition: width 0.3s, transform 0.3s;
+}
+
+.sidebar-header {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #ffffffc9;
+}
+
+.sidebar-item {
+  background: none;
+  border: none;
+  color: #cccccc;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s, transform 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateX(5px);
+}
+
+.sidebar-item.active {
+  background: #00c853; /* Solo verde */
+  color: white;
+  font-weight: bold;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+
+/* ------------------- CONTENIDO PRINCIPAL ------------------- */
+.content {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
+}
+
+.titulo {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1.5rem;
+  text-align: center; /* Se alinea al centro en todos los tamaños */
+}
+
+/* Nuevo contenedor para el botón y los detalles */
+.contenido-curso {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra el contenido horizontalmente */
+    width: 100%;
+}
+
+/* Botón de alternar */
+.toggle-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  align-self: flex-start; /* Se alinea a la izquierda dentro del contenedor flexbox */
+}
+
+.toggle-button:hover {
+  background-color: #0056b3;
+}
+
+/* Detalles del curso */
+.detalles-curso {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center; /* Se mantiene centrado para todos los tamaños */
+  margin-bottom: 2rem;
+}
+
+.detalles-curso p {
+  background: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-size: 0.95rem;
+  color: #333;
+  white-space: nowrap;
+  transition: transform 0.3s, background 0.3s;
+}
+
+.detalles-curso p:hover {
+  background: #e3f2fd;
+  transform: translateY(-3px);
+}
+
+.mensaje-vacio {
+  text-align: center;
+  font-size: 1.4rem;
+  color: #666;
+  margin: auto;
+}
+
+/* ------------------- ADAPTACIÓN RESPONSIVE ------------------- */
+/* Aquí mantienes tus media queries existentes, o los ajustas según sea necesario.
+    Con el nuevo contenedor, la lógica de centrado se maneja de forma más sencilla.
+*/
+
+@media (max-width: 1024px) {
+    .sidebar {
+      width: 220px;
+      min-width: unset;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-container {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 100%;
+      height: auto;
+      flex-direction: row;
+      padding: 0.5rem;
+      overflow-x: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      /* NUEVO: Agrega un margen superior para bajar la barra de cursos en móviles */
+      margin-top: 4rem; /* Ajusta este valor si necesitas más o menos espacio */
+    }
+    
+    .sidebar-header {
+      display: none;
+    }
+
+    .sidebar-item {
+      white-space: nowrap;
+      min-width: 150px;
+      text-align: center;
+      padding: 0.7rem 1rem;
+    }
+
+    .sidebar-item:hover {
+      transform: none;
+    }
+
+    .content {
+      padding: 1rem;
+    }
+
+    .titulo {
+      text-align: center;
+      font-size: 1.8rem;
+    }
+
+    .contenido-curso {
+        align-items: center;
+    }
+
+    .toggle-button {
+      align-self: center; /* Centra el botón en pantallas pequeñas */
+    }
+
+    .detalles-curso {
+      justify-content: center;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar-item {
+      font-size: 0.9rem;
+      padding: 0.6rem 0.8rem;
+    }
+
+    .titulo {
+      font-size: 1.6rem;
+    }
+
+    .detalles-curso {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+
+    .detalles-curso p {
+      white-space: normal;
+      text-align: center;
+    }
+}
+
+
+/* detalle del curso */
+
+.sesion-item {
+  background-color: #f0f0f0; /* Gris suave */
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sesion-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.sesion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sesion-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.toggle-sesion-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-sesion-button:hover {
+  background-color: #0056b3;
+}
+
+.sesion-detalle {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+.sesion-detalle p {
+  margin-bottom: 0.8rem;
+}
+
+.imagen-sesion {
+  width: 100%;
+  max-width: 500px;
+  display: block; /* Make the image a block element */
+  margin: 0.5rem auto 0 auto; /* Center horizontally with a top margin */
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.video-block {
+  margin: 20px 0;
+}
+
+/* El texto "Video:" se queda a la izquierda (no se toca más) */
+
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 960px; /* Máximo ancho del video */
+  margin: 10px auto; /* Centrado horizontal */
+  padding-bottom: 56.25%; /* Aspect Ratio 16:9 */
+  height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.video-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 12px;
+}
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-content input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-buttons button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-buttons button:first-child {
+  background: #ccc;
+}
+
+.modal-buttons button:last-child {
+  background: #007bff;
+  color: white;
+}
+
+
+
+/* modal para registrar sesiones */
+.modal {
+  display: flex;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.btn-registrar-sesion {
+  margin-top: 1rem;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}

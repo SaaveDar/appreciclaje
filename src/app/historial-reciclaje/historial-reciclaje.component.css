@@ -1,0 +1,211 @@
+/* src/app/historial-reciclaje/historial-reciclaje.component.css */
+
+/* --- Estilos generales del contenedor --- */
+.historial-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+h2 {
+    text-align: center;
+    color: #2e7d32; /* Verde oscuro */
+    margin-bottom: 25px;
+    font-size: 2.2rem;
+    border-bottom: 2px solid #a5d6a7;
+    padding-bottom: 10px;
+}
+
+/* --- Estilos de los botones de acción --- */
+.historial-container button {
+    background-color: #4caf50; /* Verde principal */
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.historial-container button:hover {
+    background-color: #388e3c; /* Verde más oscuro al pasar el ratón */
+    transform: translateY(-2px);
+}
+
+.historial-container p {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+/* --- Estilos del modal --- */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.3s, opacity 0.3s;
+    z-index: 1000;
+}
+
+.modal.show {
+    visibility: visible;
+    opacity: 1;
+}
+
+.modal-dialog {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    color: #2e7d32;
+    margin: 0;
+}
+
+.modal-header .close {
+    font-size: 2rem;
+    font-weight: 300;
+    line-height: 1;
+    color: #aaa;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.modal-header .close:hover {
+    color: #333;
+}
+
+.modal-body .form-group {
+    margin-bottom: 20px;
+}
+
+.modal-body label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body select,
+.modal-body input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.modal-body input[type="text"]:focus,
+.modal-body input[type="number"]:focus,
+.modal-body select:focus,
+.modal-body input[type="file"]:focus {
+    border-color: #4caf50;
+    outline: none;
+}
+
+.modal-body button[type="submit"] {
+    width: 100%;
+    padding: 15px;
+    background-color: #4caf50;
+    color: white;
+    font-size: 1.1rem;
+    border-radius: 8px;
+}
+
+/* --- Estilos de la tabla de historial --- */
+.tabla-responsive {
+    overflow-x: auto;
+}
+
+.tabla-historial {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #fafafa;
+}
+
+.tabla-historial thead {
+    background-color: #2e7d32; /* Verde oscuro para el encabezado */
+    color: white;
+}
+
+.tabla-historial th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.tabla-historial td {
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.tabla-historial tbody tr:nth-child(even) {
+    background-color: #f1f8e9; /* Verde claro para filas pares */
+}
+
+.tabla-historial tbody tr:hover {
+    background-color: #e8f5e9; /* Verde muy claro al pasar el ratón */
+    cursor: pointer;
+}
+
+.tabla-historial td img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.tabla-historial td img:hover {
+    transform: scale(1.05);
+}
+
+.tabla-historial td a {
+    color: #4caf50;
+    text-decoration: none;
+}

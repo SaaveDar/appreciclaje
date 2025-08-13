@@ -1,0 +1,168 @@
+<div class="app-container">
+  <!-- Sidebar de Cursos -->
+  <aside class="sidebar">
+    <div class="sidebar-header">Cursos Inscritos</div>
+    <button 
+      class="sidebar-item" 
+      *ngFor="let curso of cursos; trackBy: trackByCurso" 
+      [class.active]="cursoSeleccionado?.id === curso.id"
+      (click)="verCurso(curso)">
+      {{ curso.nombre }}
+    </button>
+  </aside>
+
+  <!-- Contenido Principal -->
+  <main class="content">
+  <ng-container *ngIf="cursos.length > 0; else noCursosInscritos">
+    <ng-container *ngIf="cursoSeleccionado; else seleccionarCurso">
+      <div class="curso-header">
+        <h1 class="titulo">{{ cursoSeleccionado.nombre }}</h1>
+        <button class="toggle-button" (click)="alternarDetalles()">
+          {{ mostrarDetalles ? 'Ocultar detalles' : 'Mostrar detalles' }}
+        </button>
+      </div>
+
+      <div class="detalles-curso" *ngIf="mostrarDetalles">
+        <p><strong>Duración:</strong> {{ cursoSeleccionado.duracion }}</p>
+        <p><strong>Horario:</strong> {{ cursoSeleccionado.horario }}</p>
+        <p><strong>Modalidad:</strong> {{ cursoSeleccionado.modalidad }}</p>
+        <p *ngIf="cursoSeleccionado.extra"><strong>Incluye:</strong> {{ cursoSeleccionado.extra }}</p>
+      </div>
+
+      <div class="sesiones-curso" *ngIf="cursoSeleccionado.sesiones && cursoSeleccionado.sesiones.length > 0">
+        <h2>Sesiones del Curso</h2>
+        <div *ngFor="let sesion of cursoSeleccionado.sesiones" class="sesion-item">
+          <div class="sesion-header">
+            <h3>Sesión {{ sesion.orden }} - {{ sesion.subtitulo }}</h3>
+            <div class="button-container">
+              <button class="toggle-sesion-button" (click)="alternarSesion(sesion.sesion)">
+                {{ sesionesExpandir[sesion.sesion] ? 'Contraer' : 'Expandir' }}
+              </button>
+              <button *ngIf="tipoUsuario === 'administrador' || tipoUsuario === 'docente'" class="edit-sesion-button" (click)="abrirModalEdicionSesion(sesion)">
+                ✏️ Editar
+              </button>
+            </div>
+          </div>
+
+          <img *ngIf="sesion.url_imagen" [src]="sesion.url_imagen" alt="Imagen de la sesión" class="imagen-sesion">
+
+          <div *ngIf="sesionesExpandir[sesion.sesion]" class="sesion-detalle">
+            <p><strong>Descripción:</strong> {{ sesion.descripcion }}</p>
+            <p><strong>Contenido:</strong></p>
+            <ul>
+              <li *ngFor="let item of sesion.contenidoLista">{{ item }}</li>
+            </ul>
+
+            <div *ngIf="sesion.video" class="video-block">
+              <strong>Video:</strong>
+              <div class="video-container">
+                <iframe 
+                  class="video-iframe"
+                  [src]="getVideoUrlPorSesion(sesion.sesion)" 
+                  frameborder="0" 
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowfullscreen>
+                </iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-container *ngIf="tipoUsuario === 'administrador' || tipoUsuario === 'docente'">
+        <button 
+          class="btn-registrar-sesion"
+          (click)="abrirModalRegistroSesion(cursoSeleccionado)">
+          ➕ Registrar Sesión
+        </button>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #seleccionarCurso>
+      <h2 class="mensaje-vacio">Seleccione un curso del menú lateral</h2>
+    </ng-template>
+  </ng-container>
+
+  <ng-template #noCursosInscritos>
+    <h2 class="mensaje-vacio mensaje-error-parpadeo">Actualmente no tienes cursos inscritos</h2>
+  </ng-template>
+</main>
+
+  <!-- Modal Edición de Sesión -->
+  <div class="modal" *ngIf="modalEdicionAbierto">
+    <div class="modal-content">
+      <h2>Editar Sesión</h2>
+      <form (ngSubmit)="guardarSesionEditada()" #formEdicionSesion="ngForm">
+        <input type="hidden" [(ngModel)]="sesionEditada.id_sesion" name="id_sesion">
+
+        <label>Sesión</label>
+        <input type="text" [(ngModel)]="sesionEditada.sesion" name="sesion" required>
+
+        <label>Subtítulo</label>
+        <input type="text" [(ngModel)]="sesionEditada.subtitulo" name="subtitulo" required>
+
+        <label>Descripción</label>
+        <textarea [(ngModel)]="sesionEditada.descripcion" name="descripcion" required></textarea>
+
+        <label>Contenido</label>
+        <textarea [(ngModel)]="sesionEditada.contenido" name="contenido" required></textarea>
+
+        <label>URL Imagen</label>
+        <input type="text" [(ngModel)]="sesionEditada.url_imagen" name="url_imagen">
+
+        <label>Video (URL)</label>
+        <input type="text" [(ngModel)]="sesionEditada.video" name="video">
+
+        <div class="modal-buttons">
+          <button type="submit" [disabled]="formEdicionSesion.invalid">Guardar Cambios</button>
+          <button type="button" (click)="cerrarModalEdicion()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Registro Nueva Sesión -->
+  <div class="modal" *ngIf="modalAbierto">
+    <div class="modal-content">
+      <h2>Registrar Nueva Sesión</h2>
+      <form (ngSubmit)="registrarSesion()" #formSesion="ngForm">
+        <input type="hidden" [(ngModel)]="nuevaSesion.id_curso" name="id_curso">
+
+        <label>Sesión</label>
+        <input type="text" [(ngModel)]="nuevaSesion.sesion" name="sesion" required>
+
+        <label>Subtítulo</label>
+        <input type="text" [(ngModel)]="nuevaSesion.subtitulo" name="subtitulo" required>
+
+        <label>Descripción</label>
+        <textarea [(ngModel)]="nuevaSesion.descripcion" name="descripcion" required></textarea>
+
+        <label>Contenido</label>
+        <textarea [(ngModel)]="nuevaSesion.contenido" name="contenido" required></textarea>
+
+        <label>URL Imagen</label>
+        <input type="text" [(ngModel)]="nuevaSesion.url_imagen" name="url_imagen">
+
+        <label>Video (URL)</label>
+        <input type="text" [(ngModel)]="nuevaSesion.video" name="video">
+
+        <input type="hidden" [(ngModel)]="nuevaSesion.estado" name="estado" value="activo">
+
+        <div class="modal-buttons">
+          <button type="submit" [disabled]="formSesion.invalid">Guardar Sesión</button>
+          <button type="button" (click)="cerrarModal()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Mensajes (Éxito / Error) -->
+  <div class="modal mensaje-modal" *ngIf="mostrarModalMensaje">
+    <div class="modal-content" [ngClass]="{'success-modal': modalTipo === 'success', 'error-modal': modalTipo === 'error'}">
+      <p>{{ modalMensaje }}</p>
+      <div class="modal-buttons">
+        <button type="button" class="ok-button" (click)="cerrarModalMensaje()">OK</button>
+      </div>
+    </div>
+  </div>
+</div>

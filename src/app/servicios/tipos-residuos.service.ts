@@ -20,7 +20,7 @@ export interface TipoResiduo {
   providedIn: 'root'
 })
 export class TiposResiduosService {
-  private apiUrl = 'https://comunidadvapps.com/api.php?consulta=tipos-residuos';
+  private apiUrl = 'https://comunidadvmapps.com/api.php?consulta=tipos-residuos';
 
   private tiposResiduosCache: TipoResiduo[] | null = null;
   private tiposResiduos$: Observable<TipoResiduo[]> | null = null;

@@ -102,10 +102,10 @@ export class JuegoComponent implements OnInit {
         { nombre: 'Vidrio roto', tipo: 'vidrio', imagen: 'botella.png' }
       ],
       contenedores: [
-        { tipo: 'plastico', nombre: 'Naranja', imagen: 'naranja.png' },
+        { tipo: 'plastico', nombre: 'Blanco', imagen: 'blanco.png' },
         { tipo: 'papel', nombre: 'Azul', imagen: 'azul.png' },
         { tipo: 'vidrio', nombre: 'Verde', imagen: 'verde.png' },
-        { tipo: 'organico', nombre: 'Plomo', imagen: 'plomo.png' }
+        { tipo: 'organico', nombre: 'Marrón', imagen: 'marron.png' }
       ]
     },
     3: {
@@ -265,13 +265,13 @@ export class JuegoComponent implements OnInit {
   private getApiUrl(): string {
     return this.esLocalhost()
       ? 'http://localhost:3000/api/juego/guardar-puntaje'
-      : 'https://comunidadvapps.com/api.php?accion=guardar-puntaje';
+      : 'https://comunidadvmapps.com/api.php?accion=guardar-puntaje';
   }
 
   private getProgresoUrl(): string {
     return this.esLocalhost()
       ? `http://localhost:3000/api/progreso/${this.usuario_id}`
-      : `https://comunidadvapps.com/api.php?accion=progreso&id=${this.usuario_id}`;
+      : `https://comunidadvmapps.com/api.php?accion=progreso&id=${this.usuario_id}`;
   }
 
 
@@ -293,7 +293,7 @@ export class JuegoComponent implements OnInit {
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   return isLocal
     ? 'http://localhost:3000/api/progreso/'
-    : 'https://comunidadvapps.com/api.php?accion=progreso&usuario_id=';
+    : 'https://comunidadvmapps.com/api.php?accion=progreso&usuario_id=';
 }
 
 

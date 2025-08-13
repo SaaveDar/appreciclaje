@@ -43,7 +43,7 @@ import { Observable, interval, switchMap } from 'rxjs';
   providedIn: 'root'
 })
 export class SocketService {
-  private apiUrl = 'https://www.comunidadvapps.com/api.php?consulta=tipos-residuos';
+  private apiUrl = 'https://www.comunidadvmapps.com/api.php?consulta=tipos-residuos';
 
   constructor(private http: HttpClient) {}
 
