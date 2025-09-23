@@ -1,7 +1,9 @@
 import { Component, inject, OnDestroy, AfterViewInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AppComponent } from '../app.component'; // ✅ importa para controlar el modal
+import { SessionService } from '../servicios/session.service';
+import { AuthService } from '../servicios/auth.service';
 
 @Component({
   selector: 'app-inicio',
@@ -12,6 +14,7 @@ import { AppComponent } from '../app.component'; // ✅ importa para controlar e
 })
 export class InicioComponent implements AfterViewInit, OnDestroy {
   private appComponent = inject(AppComponent); // ✅ inyección directa del componente raíz
+  private router = inject(Router)
 
   slides = [
     {
@@ -32,15 +35,26 @@ export class InicioComponent implements AfterViewInit, OnDestroy {
     },
     {
       imagen: 'assets/images/slider/imagen4.jpg',
-      titulo: 'Conoce y aprende a reciclar con Ecorecicla',
+      titulo: 'Conoce y aprende a reciclar con EcoSMART',
       descripcion: 'Identifica y clasifica residuos fácilmente con nuestra app educativa.'
     }
   ];
 
   currentSlide = 0;
   private intervaloId: any;
+  isLoggedIn = false;
+  usuarioNombre: string | null = null;
 
-  constructor(private ngZone: NgZone) {}
+
+  constructor(private ngZone: NgZone, private sessionService: SessionService, private authService: AuthService) {}
+
+    ngOnInit(): void {
+    // Nos suscribimos al BehaviorSubject
+    this.authService.usuario$.subscribe(usuario => {
+      this.isLoggedIn = !!usuario;
+      this.usuarioNombre = usuario ? usuario.nombre : null;
+    });
+  }
 
   ngAfterViewInit(): void {
     // Evita que Angular controle el temporizador: mejora rendimiento
@@ -72,4 +86,9 @@ export class InicioComponent implements AfterViewInit, OnDestroy {
     this.appComponent.modalAbierto = true;
     this.appComponent.modo = 'registro';
   }
+
+  irAJuegos(): void {
+    this.router.navigate(['/juego']);
+  }
+
 }

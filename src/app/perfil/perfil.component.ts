@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { AuthService } from '../servicios/auth.service';
 
+
 @Component({
   selector: 'app-perfil',
   standalone: true,
@@ -36,6 +37,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
   documento = '';
   fechaRegistro = '';
   tipoUsuario = '';
+
+  
+  sugerenciaSeleccionada: any = null;
+
 
   puntaje = 0;
   nivel = 1;
@@ -83,9 +88,16 @@ export class PerfilComponent implements OnInit, OnDestroy {
   ultimaFechaEscaneo = '';
   formatoQR = [BarcodeFormat.QR_CODE];
 
-
-    @ViewChild('modalEditarCurso') modalEditarCurso!: ElementRef<HTMLDialogElement>;
   
+  textoSugerencia: string = '';
+  //tabActivo: string = 'sugerencias';
+  tabActivo: string = '';  // Ningún tab activo al inicio
+
+  sugerencias: any[] = [];
+
+  @ViewChild('modalEditarCurso') modalEditarCurso!: ElementRef<HTMLDialogElement>;
+  @ViewChild('modalVerSugerencia') modalVerSugerencia!: ElementRef<HTMLDialogElement>;
+
   cursoAEditar: any = {
     id: null,
     nombre: '',
@@ -115,11 +127,20 @@ export class PerfilComponent implements OnInit, OnDestroy {
     }
   }
 
-  
+    // 🔹 Detecta cuando la pestaña se oculta (minimizada o cambio de tab)
+  @HostListener('document:visibilitychange', ['$event'])
+  onVisibilityChange() {
+    if (document.hidden) {
+      // Espera 5 segundos antes de cerrar sesión para evitar desconexión rápida
+      setTimeout(() => {
+        if (document.hidden) {
+          this.cerrarSesionAutomatico();
+        }
+      }, 5000);
+    }
+  }
 
-  // ✅ CORREGIDO: Ahora usa FormData para ser compatible con PHP
-  @HostListener('window:beforeunload', ['$event'])
-  onBeforeUnload() {
+  private cerrarSesionAutomatico() {
     if (this.isBrowser && this.usuarioActual?.correo) {
       const url = this.apiUrl.includes('api.php')
         ? `${this.apiUrl}?consulta=actualizar-estado`
@@ -129,10 +150,15 @@ export class PerfilComponent implements OnInit, OnDestroy {
       formData.append('correo', this.usuarioActual.correo);
       formData.append('estado', 'desconectado');
 
+      // Usamos sendBeacon para garantizar envío al cerrar ventana
       navigator.sendBeacon(url, formData);
-    }else {
-    console.log('⚠️ Could not send beacon. User or email not found.');
+    }
   }
+
+  // ✅ CORREGIDO: Ahora usa FormData para ser compatible con PHP
+    @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload() {
+    this.cerrarSesionAutomatico();
   }
 
   @HostListener('window:blur')
@@ -154,19 +180,86 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    if (!this.isBrowser) return;  // ✅ evita que SSR ejecute código de navegador 
+    this.verSugerencias(true); // 🔄 carga inicial y actualiza cada 5s
+
     this.authService.usuario$.subscribe(usuario => {
       this.usuarioActual = usuario;
-      this.usuarioLogueado = usuario; // ✅ SINCRONIZAR VARIABLE
+      this.usuarioLogueado = usuario;
+
       if (!usuario) {
         this.ultimaConexion = this.authService.getUltimaConexion();
         this.router.navigate(['/inicio']);
         return;
       }
-      if (this.isBrowser) {
-        this.obtenerPerfil();
-        this.obtenerProgreso();
-        this.verEstadoEnTiempoReal(usuario.correo);
-      }
+
+      if (!this.isBrowser) return;
+
+      this.authService.actualizarEstadoEnLinea(usuario.correo);
+      this.verEstadoEnTiempoReal(usuario.correo);
+
+      const userId = usuario.id;
+      this.tipoUsuario = usuario.tipo_usuario || 'estandar';
+
+      // Cargar perfil completo
+      const perfilUrl = this.apiUrl.includes('api.php')
+        ? `${this.apiUrl}?accion=perfil&id=${userId}`
+        : `${this.apiUrl}/perfil/${userId}`;
+
+      this.http.get<any>(perfilUrl).subscribe({
+        next: perfil => {
+          this.nombreUsuario = perfil.nombre ?? '';
+          this.apellidoUsuario = perfil.apellido ?? '';
+          this.correoUsuario = perfil.correo ?? '';
+          this.tipoDocumento = perfil.tipo_documento ?? '';
+          this.documento = perfil.documento ?? '';
+          this.fechaRegistro = perfil.fecha_registro ?? '';
+          this.tipoUsuario = perfil.tipo_usuario ?? 'estandar';
+          this.edad = this.calcularEdad(perfil.fecha_nacimiento);
+
+          if (this.tipoUsuario === 'administrador') {
+          this.generarQR();
+
+          // Solo actualizar si el tab de usuarios está activo
+          if (this.mostrarTablaUsuarios) {
+            this.verUsuarios();
+          }
+
+          // Recarga periódica
+          this.actualizacionSub = interval(10000).subscribe(() => {
+            if (this.mostrarTablaUsuarios) {
+              this.verUsuarios();
+            }
+          });
+
+          this.qrSub = interval(60000).subscribe(() => this.generarQR());
+        }
+
+
+          if (this.tipoUsuario === 'estandar') {
+            this.listarCursos();
+            this.obtenerCursosCanjeados();
+          }
+        },
+        error: err => console.error('❌ Error al cargar perfil:', err)
+      });
+
+      const progresoUrl = this.apiUrl.includes('api.php')
+        ? `${this.apiUrl}?accion=progreso&usuario_id=${userId}`
+        : `${this.apiUrl}/progreso/${userId}`;
+
+      this.http.get<any>(progresoUrl).subscribe({
+        next: progreso => {
+          this.puntaje = progreso.puntaje ?? 0;
+          this.nivel = progreso.nivel ?? 1;
+          this.medallas = progreso.medallas ?? '';
+        },
+        error: () => {
+          this.puntaje = 0;
+          this.nivel = 1;
+          this.medallas = '';
+        }
+      });
     });
   }
 
@@ -200,6 +293,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
         if (this.tipoUsuario === 'administrador') {
           this.generarQR();
           this.verUsuarios();
+         
          /* this.actualizacionSub = interval(10000).subscribe(() => {
             this.verUsuarios();
           });*/
@@ -224,7 +318,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     this.actualizacionSub = interval(10000).subscribe(() => {
       const url = this.apiUrl.includes('api.php')
         ? `${this.apiUrl}?accion=estado-en-linea&correo=${correo}`
-        : `${this.apiUrl}/usuario/estado/${correo}`;
+        : `${this.apiUrl}/estado/${correo}`;
 
       this.http.get<any>(url).subscribe({
         next: (res) => {
@@ -729,4 +823,68 @@ guardarEdicion() {
       this.cursoAEditar.precio = 1;
     }
   }
+
+
+enviarSugerencia() {
+  if (!this.textoSugerencia.trim()) return;
+
+  const sugerencia = {
+    id_usuario: this.usuarioLogueado?.id,   // 👈 depende de cómo guardes al usuario
+    sugerencia: this.textoSugerencia
+  };
+
+  this.authService.enviarSugerencia(sugerencia).subscribe({
+    next: () => {
+      this.textoSugerencia = '';
+      this.mensajeModal = "✅ Tu sugerencia fue enviada con éxito.";
+      this.mostrarModal = true;
+    },
+    error: () => {
+      this.mensajeModal = "❌ Error al enviar sugerencia.";
+      this.mostrarModal = true;
+    }
+  });
+}
+
+verSugerencias(autoRefresh: boolean = false) {
+  const url = this.apiUrl.includes('api.php')
+    ? `${this.apiUrl}?consulta=listar-sugerencias`
+    : `${this.apiUrl}/lista_sugerencias`;
+
+  this.http.get<any[]>(url).subscribe({
+    next: (data) => {
+      this.sugerencias = data;
+      //console.log("✅ Sugerencias cargadas:", this.sugerencias);
+
+      // ⚡ Si autoRefresh está activado, sigue pidiendo datos cada X segundos
+      if (autoRefresh) {
+        setTimeout(() => this.verSugerencias(true), 5000); // cada 5s
+      }
+    },
+    error: (err) => {
+      //console.error("❌ Error al obtener sugerencias:", err);
+
+      // ⚡ En caso de error, volver a intentar en 10s
+      if (autoRefresh) {
+        setTimeout(() => this.verSugerencias(true), 10000);
+      }
+    }
+  });
+}
+
+
+abrirModalSugerencia(s: any) {
+  this.sugerenciaSeleccionada = s;
+  if (this.modalVerSugerencia) {
+    this.modalVerSugerencia.nativeElement.showModal();
+  }
+}
+
+cerrarModalSugerencia() {
+  if (this.modalVerSugerencia) {
+    this.modalVerSugerencia.nativeElement.close();
+  }
+}
+
+
 }

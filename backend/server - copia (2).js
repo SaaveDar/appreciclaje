@@ -502,6 +502,7 @@ function verificarToken(req, res, next) {
 app.get('/api/usuarios', (req, res) => {
   const query = `
      SELECT id, nombre, apellido, correo, tipo_usuario, en_linea, ultima_conexion, permiso_reciclaje  FROM usuarios ORDER BY id;
+
   `;
 
   connection.query(query, (err, results) => {
@@ -947,107 +948,6 @@ app.get('/api/historial-todos', (req, res) => {
   connection.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: 'Error DB' });
     res.json(results);
-  });
-});
-
-
-// Guardar sugerencia
-app.post('/api/sugerencias', (req, res) => {
-  const { id_usuario, sugerencia } = req.body;
-
-  if (!id_usuario || !sugerencia) {
-    return res.status(400).json({ error: 'Faltan datos' });
-  }
-
-  const query = 'INSERT INTO sugerencias (id_usuario, sugerencia) VALUES (?, ?)';
-
-  connection.query(query, [id_usuario, sugerencia], (err, result) => {
-    if (err) {
-      console.error('❌ Error al guardar sugerencia:', err.message);
-      return res.status(500).json({ error: 'Error al guardar sugerencia', detalle: err.message });
-    }
-
-    res.status(201).json({ mensaje: '✅ Sugerencia guardada con éxito', id: result.insertId });
-  });
-});
-
-// 📌 Ruta para obtener sugerencias con el nombre del usuario
-app.get('/api/lista_sugerencias', (req, res) => {
-  const sql = `
-    SELECT s.id, s.id_usuario, s.sugerencia, DATE_FORMAT(s.fecha, '%d/%m/%Y %r') AS fecha, u.nombre 
-    FROM sugerencias s
-    INNER JOIN usuarios u ON u.id = s.id_usuario
-    ORDER BY s.fecha DESC
-  `;
-
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('❌ Error al obtener sugerencias:', err);
-      return res.status(500).json({ error: 'Error al obtener sugerencias' });
-    }
-    res.json(results);
-  });
-});
-
-
-// 📌 Ruta para guardar calificación de la aplicación (actualizada)
-app.post('/api/calificar', (req, res) => {
-  const { id_usuario, puntuacion } = req.body;
-
-  if (!id_usuario || puntuacion == null) {
-    return res.status(400).json({ mensaje: 'ID de usuario y puntuación son obligatorios.' });
-  }
-  
-  // 🔍 Primero, consulta si ya existe una calificación para este usuario
-  const checkQuery = 'SELECT id FROM calificaciones WHERE id_usuario = ?';
-  connection.query(checkQuery, [id_usuario], (err, results) => {
-    if (err) {
-      console.error('❌ Error al consultar calificación existente:', err.message);
-      return res.status(500).json({ mensaje: 'Error al verificar la calificación.', detalle: err.message });
-    }
-    
-    if (results.length > 0) {
-      // ✅ Si existe, actualiza la puntuación
-      const updateQuery = 'UPDATE calificaciones SET puntuacion = ? WHERE id_usuario = ?';
-      connection.query(updateQuery, [puntuacion, id_usuario], (updateErr, updateResult) => {
-        if (updateErr) {
-          console.error('❌ Error al actualizar calificación:', updateErr.message);
-          return res.status(500).json({ mensaje: 'Error al actualizar la calificación.', detalle: updateErr.message });
-        }
-        res.status(200).json({ mensaje: '✅ Calificación actualizada con éxito' });
-      });
-    } else {
-      // ✅ Si no existe, inserta un nuevo registro
-      const insertQuery = 'INSERT INTO calificaciones (id_usuario, puntuacion) VALUES (?, ?)';
-      connection.query(insertQuery, [id_usuario, puntuacion], (insertErr, insertResult) => {
-        if (insertErr) {
-          console.error('❌ Error al guardar calificación:', insertErr.message);
-          return res.status(500).json({ mensaje: 'Error al guardar la calificación.', detalle: insertErr.message });
-        }
-        res.status(201).json({ mensaje: '✅ Calificación guardada con éxito', id: insertResult.insertId });
-      });
-    }
-  });
-});
-
-// 📌 Nueva ruta para obtener la calificación de un usuario específico
-app.get('/api/calificacion_usuario/:id_usuario', (req, res) => {
-  const { id_usuario } = req.params;
-  const query = 'SELECT puntuacion FROM calificaciones WHERE id_usuario = ?';
-
-  connection.query(query, [id_usuario], (err, results) => {
-    if (err) {
-      console.error('❌ Error al consultar calificación de usuario:', err.message);
-      return res.status(500).json({ mensaje: 'Error al obtener la calificación.', detalle: err.message });
-    }
-
-    if (results.length > 0) {
-      // ✅ Si se encuentra una calificación, la devuelve
-      res.status(200).json({ puntuacion: results[0].puntuacion });
-    } else {
-      // ✅ Si no hay calificación, devuelve 0 o null
-      res.status(200).json({ puntuacion: 0 });
-    }
   });
 });
 

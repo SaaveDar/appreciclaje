@@ -4,6 +4,7 @@ import { CursosService } from '../servicios/cursos.service';
 import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser'; // <-- Importa DomSanitizer y SafeResourceUrl
 import { FormsModule } from '@angular/forms';  // <-- Añade esto
+import { SessionService } from '../servicios/session.service';
 
 @Component({
   selector: 'app-cursos',
@@ -49,7 +50,8 @@ sesionEditada: any = {}; // Objeto para guardar los datos de la sesión a editar
   constructor(
     private authService: AuthService,
     private cursosService: CursosService,
-    private sanitizer: DomSanitizer // <-- Inyecta DomSanitizer
+    private sanitizer: DomSanitizer , // <-- Inyecta DomSanitizer
+    private sessionService: SessionService
   ) {}
 
   ngOnInit(): void {

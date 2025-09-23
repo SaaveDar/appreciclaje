@@ -198,5 +198,19 @@ solicitarRecuperacion(correo: string): Observable<any> {
 }
 
 
+// auth.service.ts
+public get usuarioActualValue() {
+  return this.usuario$.getValue(); // si usuario$ es BehaviorSubject
+}
+
+
+enviarSugerencia(data: { id_usuario: number; sugerencia: string }): Observable<any> {
+  const url = this.API_URL.includes('api.php')
+    ? `${this.API_URL}?consulta=enviar-sugerencia`
+    : `${this.API_URL}/sugerencias`;
+
+  return this.http.post<any>(url, data);
+}
+
 
 }

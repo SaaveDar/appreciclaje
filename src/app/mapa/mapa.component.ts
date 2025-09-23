@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import * as levenshtein from 'fast-levenshtein';
 import { AuthService } from '../servicios/auth.service'; // ✅ Asegúrate de tener esta importación
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { SessionService } from '../servicios/session.service';
 
 declare var google: any;
 
@@ -15,6 +16,7 @@ interface PointOfInterest {
   name: string;
   markerTitle: string;
   iconUrl?: string; // ✅ ícono personalizado (opcional)
+  city: string;   // ✅ nueva propiedad obligatoria
 }
 
 interface Message {
@@ -43,6 +45,10 @@ export class MapaComponent implements OnInit, OnDestroy {
   rutaInterval: any;
   mensajesIA: Message[] = [];
   userAddress: string | null = null;
+
+
+  private userMarker: google.maps.Marker | null = null;
+  private infoWindow: google.maps.InfoWindow | null = null;
 
   isWaitingForResponse: boolean = false; // Controla el estado del botón "Enviar/Detener" y la deshabilitación
   private currentSpeechUtterance: SpeechSynthesisUtterance | null = null; // Para controlar la voz activa
@@ -85,25 +91,24 @@ export class MapaComponent implements OnInit, OnDestroy {
   };
 
   pointsOfInterest: PointOfInterest[] = [
-    { lat: -8.112, lng: -79.028, name: 'Trujillo Centro', markerTitle: 'Punto de reciclaje: Trujillo Centro' },
-    { lat: -8.100, lng: -79.030, name: 'Urbanización La Merced', markerTitle: 'Punto de reciclaje: Urbanización La Merced' },
-    { lat: -8.118, lng: -79.022, name: 'Urbanización Primavera', markerTitle: 'Punto de reciclaje: Urbanización Primavera' },
-    { lat: -8.106, lng: -79.040, name: 'Plaza de Armas de Trujillo', markerTitle: 'Punto de reciclaje: Plaza de Armas de Trujillo' },
-    { lat: -8.121, lng: -79.034, name: 'Hospital Regional', markerTitle: 'Punto de reciclaje: Hospital Regional' },
-    { lat: -7.824, lng: -79.237, name: 'Chocope', markerTitle: 'Punto de reciclaje: Plaza de Chocope' },
-    { lat: -7.732, lng: -79.307, name: 'Plaza de Paiján', markerTitle: 'Punto de reciclaje: Plaza de Paiján' },
-    { lat: -7.730, lng: -79.305, name: 'Iglesia Matriz de Paiján', markerTitle: 'Punto de reciclaje: Iglesia Matriz de Paiján' },
-    { lat: -7.735, lng: -79.309, name: 'Av. Víctor Raúl Haya de la Torre', markerTitle: 'Punto de reciclaje: Av. Víctor Raúl Haya de la Torre' },
-    { lat: -7.734, lng: -79.311, name: 'Mercado de Paiján', markerTitle: 'Punto de reciclaje: Mercado de Paiján' },
-    { lat: -7.736, lng: -79.306, name: 'Calle Comercio', markerTitle: 'Punto de reciclaje: Calle Comercio' },
-    { lat: -7.825, lng: -79.239, name: 'Av. Panamericana Norte', markerTitle: 'Punto de reciclaje: Av. Panamericana Norte' },
-    { lat: -7.823, lng: -79.235, name: 'Municipalidad de Chocope', markerTitle: 'Punto de reciclaje: Municipalidad de Chocope' },
-    { lat: -7.826, lng: -79.238, name: 'Centro de Salud Chocope', markerTitle: 'Punto de reciclaje: Centro de Salud Chocope' },
-    { lat: -7.822, lng: -79.236, name: 'Calle Bolívar', markerTitle: 'Punto de reciclaje: Calle Bolívar' },
-    { lat: -7.7352, lng: -79.3056, name: 'IESTP Paiján', markerTitle: 'Punto de reciclaje: IESTP Paiján' },
-    { lat: -8.11458, lng: -79.03929, name: 'Universidad Nacional de Trujillo', markerTitle: 'Punto de reciclaje: UNT Trujillo' },
-    { lat: -7.4782, lng: -78.8298, name: 'IESTP de Cascas', markerTitle: 'Punto de reciclaje: IESTP de Cascas' },
-    { lat: -8.1136, lng: -79.0290, name: 'Municipalidad Provincial de Trujillo', markerTitle: 'Punto de reciclaje: Municipalidad de Trujillo (MPT)', iconUrl:'🏛️' }
+    { lat: -8.112, lng: -79.028, name: 'Trujillo Centro', city: 'Trujillo', markerTitle: 'Punto de reciclaje: Trujillo Centro' },
+    { lat: -8.100, lng: -79.030, name: 'Urbanización La Merced', city: 'Trujillo',markerTitle: 'Punto de reciclaje: Urbanización La Merced' },
+    { lat: -8.118, lng: -79.022, name: 'Urbanización Primavera', city: 'Trujillo', markerTitle: 'Punto de reciclaje: Urbanización Primavera' },
+    { lat: -8.106, lng: -79.040, name: 'Plaza de Armas de Trujillo',city: 'Trujillo', markerTitle: 'Punto de reciclaje: Plaza de Armas de Trujillo' },
+    { lat: -8.121, lng: -79.034, name: 'Hospital Regional', city: 'Trujillo',markerTitle: 'Punto de reciclaje: Hospital Regional' },
+    { lat: -7.824, lng: -79.237, name: 'Chocope', city: 'Chocope', markerTitle: 'Punto de reciclaje: Plaza de Chocope' },
+    { lat: -7.732, lng: -79.307, name: 'Plaza de armas Paiján',  city: 'Paiján', markerTitle: 'Punto de reciclaje: Plaza de Paiján' },
+    { lat: -7.730, lng: -79.305, name: 'Iglesia Matriz de Paiján',  city: 'Paiján', markerTitle: 'Punto de reciclaje: Iglesia Matriz de Paiján' },
+    { lat: -7.735, lng: -79.309, name: 'Av. Víctor Raúl Haya de la Torre', city: 'Paiján', markerTitle: 'Punto de reciclaje: Av. Víctor Raúl Haya de la Torre' },
+    { lat: -7.734, lng: -79.311, name: 'Mercado de Paiján', city: 'Paiján', markerTitle: 'Punto de reciclaje: Mercado de Paiján' },
+    { lat: -7.736, lng: -79.306, name: 'Calle Comercio', city: 'Paiján', markerTitle: 'Punto de reciclaje: Calle Comercio' },
+    { lat: -7.825, lng: -79.239, name: 'Av. Panamericana Norte', city: 'Paiján', markerTitle: 'Punto de reciclaje: Av. Panamericana Norte' },
+    { lat: -7.823, lng: -79.235, name: 'Municipalidad de Chocope', city: 'Chocope', markerTitle: 'Punto de reciclaje: Municipalidad de Chocope' },
+    { lat: -7.826, lng: -79.238, name: 'Centro de Salud Chocope', city: 'Chocope', markerTitle: 'Punto de reciclaje: Centro de Salud Chocope' },
+    { lat: -7.822, lng: -79.236, name: 'Calle Bolívar', city: 'Chocope', markerTitle: 'Punto de reciclaje: Calle Bolívar' },
+    { lat: -7.73680, lng: -79.29529, name: 'Instituto de Educación Superior Tecnológico Público Paiján',  city: 'Paiján', markerTitle: 'Punto de reciclaje: Inst. Edu. Sup. Tec. Púb. Paiján' },
+    { lat: -8.11458, lng: -79.03929, name: 'Universidad Nacional de Trujillo', city: 'Trujillo', markerTitle: 'Punto de reciclaje: Universidad Nacional de Trujillo' },
+    { lat: -8.1136, lng: -79.0290, name: 'Municipalidad Provincial de Trujillo', city: 'Cascas', markerTitle: 'Punto de reciclaje: Municipalidad de Trujillo (MPT)', iconUrl:'🏛️' }
 
   ];
 
@@ -111,28 +116,52 @@ export class MapaComponent implements OnInit, OnDestroy {
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object,
     private authService: AuthService, // ✅ Esto habilita el acceso a usuario$
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private sessionService: SessionService
   ) { }
 
+  private watchId: number | null = null; // Add this property to your class
+  
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.initMap();
-      this.rutaInterval = setInterval(() => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            this.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          },
-          (err) => console.error('Error obteniendo ubicación actualizada:', err),
-          { enableHighAccuracy: true }
-        );
-      }, 15000);
-    }
+  if (isPlatformBrowser(this.platformId)) {
+    // Se inicializa el mapa con la ubicación por defecto o la última conocida.
+    // Esto asegura que el mapa se cargue incluso si la ubicación del usuario tarda en llegar.
+    this.initMap();
+
+    // ✅ Usamos watchPosition para un seguimiento en tiempo real de la ubicación
+    this.watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        this.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        
+        // Llama a este método para crear o actualizar el marcador en el mapa.
+        this.updateUserMarker();
+        
+        // Centra el mapa en la ubicación del usuario a medida que se mueve
+        if (this.map) {
+          this.map.setCenter(this.userLocation);
+        }
+      },
+      (err) => {
+        console.error('Error obteniendo ubicación en tiempo real:', err);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
   }
+}
 
   ngOnDestroy(): void {
     if (this.rutaInterval) clearInterval(this.rutaInterval);
     this.clearAllRoutes();
     this.stopAllProcessing(); // Detener todo al destruir el componente
+
+    // Stop the geolocation watch
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+    }
   }
 
   toggleDarkMode(event: any): void {
@@ -315,60 +344,54 @@ export class MapaComponent implements OnInit, OnDestroy {
    * @param cleanedUserPrompt El prompt del usuario ya limpio.
    * @returns El nombre exacto del POI si se encuentra una coincidencia, o `null` si no.
    */
-  private isSpecificLocationRequest(cleanedUserPrompt: string): string | null {
+  private isSpecificLocationRequest(cleanedUserPrompt: string): { type: 'poi' | 'city', name: string } | null {
     const navigationKeywords = ['llevame', 'ruta', 'ir', 'como llegar', 'donde', 'destino'];
     let hasNavigationIntent = false;
     for (const keyword of navigationKeywords) {
-      if (cleanedUserPrompt.includes(keyword)) {
-        hasNavigationIntent = true;
-        break;
-      }
-    }
-
-    for (const poi of this.pointsOfInterest) {
-      const cleanedPoiName = this.cleanText(poi.name);
-
-      if (cleanedUserPrompt === cleanedPoiName) {
-        return poi.name;
-      }
-
-      if (levenshtein.get(cleanedUserPrompt, cleanedPoiName) <= this.LEVENSHTEIN_THRESHOLD + 1) {
-        return poi.name;
-      }
-
-      const userWords = cleanedUserPrompt.split(' ').filter(word => word.length > 0);
-      const poiNameWords = cleanedPoiName.split(' ').filter(word => word.length > 0);
-
-      let matchedPoiWords = 0;
-      for (const poiWord of poiNameWords) {
-        for (const userWord of userWords) {
-          if (levenshtein.get(userWord, poiWord) <= this.LEVENSHTEIN_THRESHOLD) {
-            matchedPoiWords++;
+        if (cleanedUserPrompt.includes(keyword)) {
+            hasNavigationIntent = true;
             break;
-          }
         }
-      }
-
-      if (poiNameWords.length > 0 &&
-        (matchedPoiWords / poiNameWords.length >= 0.6) &&
-        (hasNavigationIntent || (matchedPoiWords === poiNameWords.length && poiNameWords.length > 1))
-      ) {
-        console.log(`Ubicación detectada (fuzzy): "${poi.name}" en prompt "${cleanedUserPrompt}"`);
-        return poi.name;
-      }
     }
 
-    // AÑADIDO: Bucle para reconocer ciudades conocidas
+    // ✅ NUEVO: Lógica para encontrar un POI específico
+    for (const poi of this.pointsOfInterest) {
+        const cleanedPoiName = this.cleanText(poi.name);
+        if (levenshtein.get(cleanedUserPrompt, cleanedPoiName) <= this.LEVENSHTEIN_THRESHOLD + 1) {
+            return { type: 'poi', name: poi.name };
+        }
+        
+        const userWords = cleanedUserPrompt.split(' ').filter(word => word.length > 0);
+        const poiNameWords = cleanedPoiName.split(' ').filter(word => word.length > 0);
+
+        let matchedPoiWords = 0;
+        for (const poiWord of poiNameWords) {
+            for (const userWord of userWords) {
+                if (levenshtein.get(userWord, poiWord) <= this.LEVENSHTEIN_THRESHOLD) {
+                    matchedPoiWords++;
+                    break;
+                }
+            }
+        }
+        if (poiNameWords.length > 0 &&
+            (matchedPoiWords / poiNameWords.length >= 0.6) &&
+            (hasNavigationIntent || (matchedPoiWords === poiNameWords.length && poiNameWords.length > 1))) {
+            console.log(`Ubicación detectada (fuzzy): "${poi.name}" en prompt "${cleanedUserPrompt}"`);
+            return { type: 'poi', name: poi.name };
+        }
+    }
+
+    // ✅ NUEVO: Lógica para encontrar una CIUDAD conocida
     for (const city of this.KNOWN_CITIES) {
-      const cleanedCityName = this.cleanText(city.name);
-      if (levenshtein.get(cleanedUserPrompt, cleanedCityName) <= this.LEVENSHTEIN_THRESHOLD) {
-        console.log(`Ciudad conocida detectada: "${city.name}"`);
-        return city.name;
-      }
+        const cleanedCityName = this.cleanText(city.name);
+        if (levenshtein.get(cleanedUserPrompt, cleanedCityName) <= this.LEVENSHTEIN_THRESHOLD) {
+            console.log(`Ciudad conocida detectada: "${city.name}"`);
+            return { type: 'city', name: city.name };
+        }
     }
 
     return null;
-  }
+}
 
   private cleanText(text: string): string {
     return text.toLowerCase()
@@ -468,80 +491,137 @@ export class MapaComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  procesarPrompt(): void {
-    
-    if (this.isWaitingForResponse) {
-      // Si ya está esperando, el botón se comporta como "Detener"
-      this.stopAllProcessing(); // Detiene tanto la voz como la escritura y resetea el estado
-      return; // Salir de la función
-    }
+  // En mapa.component.ts
 
-    if (!this.userLocation) {
-      this.displayAIResponse('🔄 Esperando ubicación para poder ayudarte...', 'Esperando ubicación para poder ayudarte.');
-      return;
-    }
+// En mapa.component.ts
 
-    const currentPrompt = this.userPrompt.trim();
-    if (currentPrompt === '') {
-      return;
-    }
+// En mapa.component.ts
 
-    if (this.esSaludoNatural(currentPrompt)) {
-      this.mensajesIA.push({ tipo: 'usuario', texto: currentPrompt });
-      this.userPrompt = '';
-      this.scrollAlFinal();
-
-      const nombre = this.authService?.usuario$.value?.nombre || 'amigo';
-      const saludo = `¡Hola **${nombre}**! Soy tu inteligencia artificial orientada a encontrar la ruta más rápida a los puntos estratégicos de reciclaje. ¡Estoy lista para ayudarte a salvar el planeta!.¿Qué lugar o dirección quieres que te traze en el mapa?. 🌎♻️`;
-      this.displayAIResponse(saludo, this.cleanTextForSpeech(saludo)); // Limpiar para el habla
-      return;
-    }
-
-    this.mensajesIA.push({ tipo: 'usuario', texto: currentPrompt });
-    this.userPrompt = '';
-    this.scrollAlFinal();
-
-    this.isWaitingForResponse = true;
-
-    const cleanedUserPrompt = this.cleanText(currentPrompt);
-    const recognizedLocationOrCity = this.isSpecificLocationRequest(cleanedUserPrompt);
-
-    if (recognizedLocationOrCity) {
-      const isKnownCity = this.KNOWN_CITIES.some(city => city.name === recognizedLocationOrCity);
-
-      if (isKnownCity) {
-        const cityData = this.KNOWN_CITIES.find(city => city.name === recognizedLocationOrCity);
-        if (cityData) {
-          const relevantPoints = this.pointsOfInterest.filter(poi =>
-            this.cleanText(poi.name).includes(cityData.name) ||
-            this.dist({ lat: cityData.lat, lng: cityData.lng }, poi) <= this.MAX_DISTANCE_KM * 2
-          );
-
-          if (relevantPoints.length > 0) {
-            const poiNames = relevantPoints.map(p => p.name).join(', ');
-            const responseHtml = `✅ Entendido. Has preguntado por **${cityData.name}**. ¡Excelente elección! Aquí tenemos puntos de reciclaje en: ${poiNames}. ¿Quieres que te muestre el más cercano o todos los puntos en **${cityData.name}**?`;
-            const responseText = `Entendido. Has preguntado por ${cityData.name}. Excelente elección. Aquí tenemos puntos de reciclaje en: ${poiNames}. Quieres que te muestre el más cercano o todos los puntos en ${cityData.name}?`;
-            this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText)); // Limpiar para el habla
-          } else {
-            const response = `Lo siento, aunque reconocí "**${recognizedLocationOrCity}**", ¡parece que mis mapas no tienen puntos de reciclaje en esa ciudad todavía! Mis puntos se centran en **Trujillo, Paiján y Chocope**. ¿Probamos con alguna de ellas?`;
-            this.displayAIResponse(response, this.cleanTextForSpeech(response)); // Limpiar para el habla
-          }
-        }
-      } else {
-        this.displayAIResponse(`De acuerdo, buscando la ruta hacia **${recognizedLocationOrCity}**... ¡A por esa aventura de reciclaje!`, `De acuerdo, buscando la ruta hacia ${recognizedLocationOrCity}. A por esa aventura de reciclaje!`);
-        this.rutaEspecifica(recognizedLocationOrCity, false);
-      }
-    } else if (this.isSimilar(cleanedUserPrompt, this.KEY_PHRASES.allPointsNearby)) {
-      this.displayAIResponse('¡Entendido! Buscando los puntos de reciclaje más cercanos y trazando rutas... ¡Prepárate para la acción!', 'Entendido. Buscando los puntos de reciclaje más cercanos y trazando rutas. Prepárate para la acción!');
-      this.trazarTodasRutasCercanas(false);
-    } else if (this.isSimilar(cleanedUserPrompt, this.KEY_PHRASES.closestPoint)) {
-      this.displayAIResponse('Claro, buscando el punto de reciclaje más cercano y trazando la ruta... ¡El más rápido gana!', 'Claro, buscando el punto de reciclaje más cercano y trazando la ruta. El más rápido gana!');
-      this.rutaMasCercana(false);
-    } else {
-      this.handleUnknownLocation(currentPrompt);
-    }
+procesarPrompt(): void {
+  if (this.isWaitingForResponse) {
+    this.stopAllProcessing();
+    return;
+  }
+  if (!this.userLocation) {
+    this.displayAIResponse('🔄 Esperando ubicación para poder ayudarte...', 'Esperando ubicación para poder ayudarte.');
+    return;
+  }
+  // ✅ CORREGIDO: Declara la variable currentPrompt y asigna el valor de this.userPrompt.
+  const currentPrompt = this.userPrompt.trim(); 
+  if (currentPrompt === '') {
+    return;
   }
 
+  this.mensajesIA.push({ tipo: 'usuario', texto: currentPrompt });
+  this.userPrompt = '';
+  this.scrollAlFinal();
+  this.isWaitingForResponse = true;
+
+  const cleanedUserPrompt = this.cleanText(currentPrompt);
+
+  // ✅ NUEVO: Usar la lógica de isSpecificLocationRequest para manejar ambos casos
+  const recognizedLocation = this.isSpecificLocationRequest(cleanedUserPrompt);
+
+  if (recognizedLocation) {
+      if (recognizedLocation.type === 'poi') {
+          // Es un punto de interés específico
+          const targetPOI = this.pointsOfInterest.find(p => p.name === recognizedLocation.name);
+          if (targetPOI) {
+              const responseHtml = `✅ ¡Entendido! Trazando la ruta al punto de reciclaje **${targetPOI.name}**... ¡A reciclar!`;
+              const responseText = `Entendido. Trazando la ruta al punto de reciclaje ${targetPOI.name}. ¡A reciclar!`;
+              this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText));
+              this.rutaEspecifica(targetPOI.name, false);
+          } else {
+              const response = `Lo siento, no pude encontrar la información para el punto de interés "**${recognizedLocation.name}**".`;
+              this.displayAIResponse(response, this.cleanTextForSpeech(response));
+          }
+      } else if (recognizedLocation.type === 'city') {
+          // Es una ciudad conocida
+          const cityData = this.KNOWN_CITIES.find(city => city.name === recognizedLocation.name);
+          if (cityData) {
+              const relevantPoints = this.pointsOfInterest.filter(poi =>
+                  poi.city.toLowerCase() === cityData.name.toLowerCase()
+              );
+
+              if (relevantPoints.length > 0) {
+                  const poiNames = relevantPoints.map(p => p.name).join(', ');
+                  const responseHtml = `✅ Entendido. Aquí están todos los puntos de reciclaje en **${cityData.name}**: ${poiNames}.`;
+                  const responseText = `Entendido. Aquí están todos los puntos de reciclaje en ${cityData.name}: ${poiNames}.`;
+
+                  this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText));
+                  this.trazarTodosPuntosEnCiudad(relevantPoints);
+              } else {
+                  const response = `Lo siento, no tengo puntos de reciclaje registrados para la ciudad de **${cityData.name}**.`;
+                  this.displayAIResponse(response, this.cleanTextForSpeech(response));
+              }
+          }
+      }
+      return; // Salir después de manejar la solicitud de ubicación
+  }
+
+  // ✅ Detección de frases genéricas (si no se encontró POI o ciudad)
+  if (this.isSimilar(cleanedUserPrompt, this.KEY_PHRASES.allPointsNearby)) {
+      this.displayAIResponse(
+          '¡Entendido! Buscando los puntos de reciclaje más cercanos y trazando rutas... ¡Prepárate para la acción!',
+          'Entendido. Buscando los puntos de reciclaje más cercanos y trazando rutas. Prepárate para la acción!'
+      );
+      this.trazarTodasRutasCercanas(false);
+  } else if (this.isSimilar(cleanedUserPrompt, this.KEY_PHRASES.closestPoint)) {
+      this.displayAIResponse(
+          'Claro, buscando el punto de reciclaje más cercano y trazando la ruta... ¡El más rápido gana!',
+          'Claro, buscando el punto de reciclaje más cercano y trazando la ruta. El más rápido gana!'
+      );
+      this.rutaMasCercana(false);
+  } else {
+      // Si no es un POI, ciudad, o frase genérica, intenta geocodificar.
+      this.handleUnknownLocation(currentPrompt);
+  }
+}
+
+  /**
+ * Trazar todos los puntos de interés de una ciudad específica en el mapa.
+ * @param points Los puntos de interés filtrados para una ciudad.
+ */
+private trazarTodosPuntosEnCiudad(points: PointOfInterest[]): void {
+  if (!this.map || points.length === 0) return;
+  this.clearAllRoutes();
+  this.resetMarkerIcons();
+
+  // Zoom y centro en la ciudad
+  const cityPoint = points[0];
+  this.map.setCenter({ lat: cityPoint.lat, lng: cityPoint.lng });
+  this.map.setZoom(14); // Un zoom adecuado para una ciudad
+
+  let aiResponseText: string;
+  let aiResponseHtml = `✅ **¡Hecho!** He trazado los siguientes puntos de reciclaje en **${this.cleanText(cityPoint.name)}**:`;
+  let pointsSummary = '';
+
+  points.forEach((poi, index) => {
+    const label = String.fromCharCode(65 + index);
+    const marker = this.placedMarkers.get(poi.markerTitle);
+    if (marker) {
+      // Cambiar el ícono y añadir una etiqueta
+      marker.setLabel({
+        text: label,
+        color: "white",
+        fontSize: "14px",
+        fontWeight: "bold",
+      });
+      marker.setIcon({
+        url: 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png',
+        scaledSize: new google.maps.Size(40, 40)
+      });
+    }
+    pointsSummary += `<br>&nbsp;&nbsp;&nbsp;&nbsp;**${label}.** ${poi.name}`;
+  });
+
+  aiResponseHtml += pointsSummary;
+  aiResponseText = `Hecho. He trazado los siguientes puntos de reciclaje en ${this.cleanText(cityPoint.name)}: ${pointsSummary.replace(/<br>&nbsp;&nbsp;&nbsp;&nbsp;/g, ' ').replace(/\*\*/g, '')}`;
+
+  this.displayAIResponse(aiResponseHtml, this.cleanTextForSpeech(aiResponseText));
+  this.stopProcessing();
+}
+  
   // NUEVA FUNCIÓN AUXILIAR PARA QUITAR COMILLAS
   private stripQuotes(text: string): string {
     if (text.startsWith('"') && text.endsWith('"')) {
@@ -551,41 +631,62 @@ export class MapaComponent implements OnInit, OnDestroy {
   }
 
   // NUEVO MÉTODO PARA MANEJAR UBICACIONES DESCONOCIDAS
-  private async handleUnknownLocation(receivedUserPrompt: string): Promise<void> {
-    const geocoder = new google.maps.Geocoder();
-    const cleanedPromptForGeocoder = this.cleanText(receivedUserPrompt);
-    const displayPrompt = this.stripQuotes(receivedUserPrompt); // Quitar comillas para mostrar
+  // En mapa.component.ts
 
-    try {
-      const result = await geocoder.geocode({ address: cleanedPromptForGeocoder });
+// ... (existing code)
 
-      if (result.results && result.results.length > 0) {
-        const location = result.results[0].geometry.location;
-        const formattedAddress = result.results[0].formatted_address;
+private async handleUnknownLocation(receivedUserPrompt: string): Promise<void> {
+  const geocoder = new google.maps.Geocoder();
+  const cleanedPromptForGeocoder = this.cleanText(receivedUserPrompt);
+  const displayPrompt = this.stripQuotes(receivedUserPrompt);
 
+  try {
+    const result = await geocoder.geocode({ address: cleanedPromptForGeocoder });
+
+    if (result.results && result.results.length > 0) {
+      const location = result.results[0].geometry.location;
+      const formattedAddress = result.results[0].formatted_address;
+
+      // ✅ NUEVA LÓGICA: Verificar si la ubicación geocodificada coincide con un POI existente
+      const matchedPoi = this.pointsOfInterest.find(poi => {
+        // Usar la función de distancia para verificar la proximidad
+        const distanceToPoi = this.dist({ lat: location.lat(), lng: location.lng() }, poi);
+        // Usar un umbral muy pequeño (e.g., 0.1 km) para considerar una coincidencia
+        return distanceToPoi <= 0.1;
+      });
+
+      if (matchedPoi) {
+        // Si hay una coincidencia, tratarla como una solicitud de POI específica
+        const responseHtml = `✅ ¡Entendido! Trazando la ruta al punto de reciclaje **${matchedPoi.name}**... ¡A reciclar!`;
+        const responseText = `Entendido. Trazando la ruta al punto de reciclaje ${matchedPoi.name}. ¡A reciclar!`;
+        this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText));
+        this.rutaEspecifica(matchedPoi.name, false);
+      } else {
+        // Lógica existente para manejar ubicaciones desconocidas pero dentro de un área conocida
         const isWithinKnownArea = this.isLocationWithinKnownArea(location.lat(), location.lng());
 
         if (isWithinKnownArea) {
           const responseHtml = `🤔 ¡Vaya! Parece que estás buscando **${displayPrompt}** (${formattedAddress}). Aunque no es un punto de reciclaje específico en mi base de datos, ¡está en mi radar! Está en una zona que conozco (**Trujillo, Paiján o Chocope**). ¿Quieres que te muestre los puntos de reciclaje más cercanos a esa ubicación, o todos los puntos en esta área?`;
           const responseText = `Vaya, parece que estás buscando ${displayPrompt} (${formattedAddress}). Aunque no es un punto de reciclaje específico en mi base de datos, está en mi radar. Está en una zona que conozco (Trujillo, Paiján o Chocope). Quieres que te muestre los puntos de reciclaje más cercanos a esa ubicación, o todos los puntos en esta área?`;
-          this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText)); // Limpiar para el habla
+          this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText));
         } else {
           const responseHtml = `😞 ¡Uy! La dirección ingresada **${displayPrompt}** está fuera de mi zona de confort de reciclaje por el momento. ¡Parece que estamos en el fin del mundo! Te puedo ayudar a encontrar puntos de reciclaje en **Trujillo, Paiján y Chocope**. ¿Qué te parece?`;
           const responseText = `Uy. La dirección ingresada ${displayPrompt} está fuera de mi zona de confort de reciclaje por el momento. Te puedo ayudar a encontrar puntos de reciclaje en Trujillo, Paiján y Chocope. Qué te parece?`;
-          this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText)); // Limpiar para el habla
+          this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText));
         }
-      } else {
-        const responseHtml = '🤖 ¡Caracoles! Lo siento, no pude entender tu solicitud. ¡Mi cerebro de IA está en modo siesta! Por favor, intenta de nuevo con un comando diferente o más claro.';
-        const responseText = 'Caracoles. Lo siento, no pude entender tu solicitud. Mi cerebro de IA está en modo siesta. Por favor, intenta de nuevo con un comando diferente o más claro.';
-        this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText)); // Limpiar para el habla
       }
-    } catch (error) {
-      console.error('Error durante la geocodificación:', error);
-      const responseHtml = '🤖 ¡Ups! Hubo un problemilla al procesar tu ubicación. Parece que las señales no llegan bien. Por favor, intenta de nuevo con un comando diferente o más claro. ¡No te rindas!';
-      const responseText = 'Ups. Hubo un problemilla al procesar tu ubicación. Parece que las señales no llegan bien. Por favor, intenta de nuevo con un comando diferente o más claro. No te rindas!';
-      this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText)); // Limpiar para el habla
+    } else {
+      const responseHtml = '🤖 ¡Caracoles! Lo siento, no pude entender tu solicitud. ¡Mi cerebro de IA está en modo siesta! Por favor, intenta de nuevo con un comando diferente o más claro.';
+      const responseText = 'Caracoles. Lo siento, no pude entender tu solicitud. Mi cerebro de IA está en modo siesta. Por favor, intenta de nuevo con un comando diferente o más claro.';
+      this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText));
     }
+  } catch (error) {
+    console.error('Error durante la geocodificación:', error);
+    const responseHtml = '🤖 ¡Ups! Hubo un problemilla al procesar tu ubicación. Parece que las señales no llegan bien. Por favor, intenta de nuevo con un comando diferente o más claro. ¡No te rindas!';
+    const responseText = 'Ups. Hubo un problemilla al procesar tu ubicación. Parece que las señales no llegan bien. Por favor, intenta de nuevo con un comando diferente o más claro. No te rindas!';
+    this.displayAIResponse(responseHtml, this.cleanTextForSpeech(responseText));
   }
+}
 
   // NUEVO MÉTODO PARA VERIFICAR SI LA UBICACIÓN ESTÁ DENTRO DE UN ÁREA CONOCIDA
   private isLocationWithinKnownArea(lat: number, lng: number): boolean {
@@ -895,60 +996,158 @@ export class MapaComponent implements OnInit, OnDestroy {
     });
   }
 
-  trazarRuta(origen: any, targetMarkerTitle: string, destinoCoords: any): void {
-    this.stopAllProcessing(); // Detiene cualquier voz o escritura anterior y resetea el estado
-    this.isWaitingForResponse = true; // Asegurarse de que el botón cambie a "Detener"
+  mostrarPuntosPorCiudad(ciudad: string, origen: any): void {
+  const puntos = this.pointsOfInterest.filter(
+    p => p.city.toLowerCase() === ciudad.toLowerCase()
+  );
 
-    this.resetMarkerIcons();
+  // 🚫 Si no hay puntos en esa ciudad
+  if (puntos.length === 0) {
     this.clearAllRoutes();
+    this.resetMarkerIcons();
 
-    const currentRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: true });
-    currentRenderer.setMap(this.map);
-    this.activeDirectionsRenderers.push(currentRenderer);
+    const aiMessageHTML = `🚫 No se encontraron puntos de reciclaje en <b>${ciudad}</b>.`;
+    const aiMessageSpeech = `No se encontraron puntos de reciclaje en ${ciudad}.`;
 
-    this.directionsService.route({
-      origin: origen,
-      destination: destinoCoords,
-      travelMode: google.maps.TravelMode.DRIVING,
-      drivingOptions: {
-        departureTime: new Date(),
-        trafficModel: 'bestguess'
-      }
-    }, (res: any, status: any) => {
-      if (status !== google.maps.DirectionsStatus.OK) {
-        const errorText = `❌ No se pudo trazar la ruta: ${status}`;
-        this.displayAIResponse(errorText, errorText);
-        currentRenderer.setMap(null);
-        this.activeDirectionsRenderers = this.activeDirectionsRenderers.filter(r => r !== currentRenderer);
-        // stopProcessing ya será llamado por displayAIResponse a través de speak()
-        return;
-      }
-
-      currentRenderer.setDirections(res);
-
-      this.placedMarkers.forEach((marker: any, key: string) => {
-        if (key === targetMarkerTitle) {
-          marker.setIcon({
-            url: 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png',
-            scaledSize: new google.maps.Size(40, 40)
-          });
-        }
-      });
-
-      const leg = res.routes[0].legs[0];
-      const distancia = leg.distance.text;
-      const duracionCaminando = leg.duration.text;
-      const duracionTaxi = Math.round(leg.duration.value / 60);
-
-      const cleanTargetTitle = targetMarkerTitle.replace('Punto de reciclaje: ', '');
-      const currentAddress = this.userAddress || 'tu ubicación actual';
-
-      const aiMessageHTML = `🧭 Ruta hacia <b>${cleanTargetTitle}</b>. Distancia: ${distancia}.<br>🧍 Caminando toma ${duracionCaminando.replace(/\bmin\b/, 'minutos')}.<br>🚕 En automóvil aproximadamente ${duracionTaxi} minutos.<br>♻️Punto estratégico para reciclar y cuidar nuestro planeta.🌎`;
-      const aiMessageSpeech = `Ruta hacia ${cleanTargetTitle}. Distancia: ${distancia}. Caminando toma ${duracionCaminando.replace(/\bmin\b/, 'minutos')}. En automóvil aproximadamente ${duracionTaxi} minutos. Punto estratégico para reciclar y cuidar nuestro planeta.`;
-      
-      this.displayAIResponse(aiMessageHTML, aiMessageSpeech); // Pasar ambos textos, displayAIResponse llamará a speak()
-    });
+    this.displayAIResponse(aiMessageHTML, aiMessageSpeech);
+    return;
   }
+
+  // ✅ Si hay puntos, listar y trazar rutas
+  let respuesta = `¡Listo! Aquí tienes los puntos de reciclaje en <b>${ciudad}</b>:<br>`;
+  puntos.forEach((p, i) => {
+    respuesta += `${String.fromCharCode(65 + i)}. ${p.name}<br>`;
+    this.trazarRuta(origen, p.markerTitle, { lat: p.lat, lng: p.lng });
+  });
+
+  this.displayAIResponse(respuesta, respuesta);
+}
+
+
+  trazarRuta(origen: any, targetMarkerTitle: string, destinoCoords: any): void {
+  this.stopAllProcessing();
+  this.isWaitingForResponse = true;
+
+  this.resetMarkerIcons();
+  this.clearAllRoutes();
+
+  // 🚗 Renderizador ruta en auto (rojo)
+  const drivingRenderer = new google.maps.DirectionsRenderer({
+    suppressMarkers: true,
+    polylineOptions: { strokeColor: '#FF0000', strokeOpacity: 0.7, strokeWeight: 5 }
+  });
+  drivingRenderer.setMap(this.map);
+  this.activeDirectionsRenderers.push(drivingRenderer);
+
+  let distancia = '';
+  let duracionAuto = '';
+  let duracionCaminando = '';
+  let huboError = false;
+
+  const mostrarRespuesta = () => {
+    if (huboError) {
+      const cleanTargetTitle = targetMarkerTitle.replace('Punto de reciclaje: ', '');
+      const aiMessageHTML = `🚫 No se encontraron rutas válidas hacia <b>${cleanTargetTitle}</b>.`;
+      const aiMessageSpeech = `No se encontraron rutas válidas hacia ${cleanTargetTitle}.`;
+
+      this.displayAIResponse(aiMessageHTML, aiMessageSpeech);
+      return;
+    }
+
+    if (duracionAuto && duracionCaminando) {
+      const cleanTargetTitle = targetMarkerTitle.replace('Punto de reciclaje: ', '');
+
+      const aiMessageHTML = `🧭 Ruta hacia <b>${cleanTargetTitle}</b>.<br>
+      🧍 A pie: ${duracionCaminando} (ruta en <span style="color:blue">azul</span> 🚶).<br>
+      🚕 En automóvil: ${duracionAuto} (ruta en <span style="color:red">rojo</span> 🚗).<br>
+      ♻️ Punto estratégico para reciclar y cuidar nuestro planeta.🌎 vamos por más...`;
+
+      const aiMessageSpeech = `Ruta hacia ${cleanTargetTitle}. Caminando toma ${duracionCaminando}. En automóvil aproximadamente ${duracionAuto}.`;
+
+      this.displayAIResponse(aiMessageHTML, aiMessageSpeech);
+      this.setMarkerIcon(targetMarkerTitle, 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png');
+    }
+  };
+
+  // 🚗 Ruta en AUTO
+  this.directionsService.route({
+    origin: origen,
+    destination: destinoCoords,
+    travelMode: google.maps.TravelMode.DRIVING,
+    provideRouteAlternatives: true,
+    drivingOptions: {
+      departureTime: new Date(),
+      trafficModel: 'bestguess'
+    }
+  }, (res: any, status: any) => {
+    if (status === 'OK' && res && res.routes && res.routes.length > 0) {
+      let bestRoute = res.routes[0];
+      for (const route of res.routes) {
+        if (route.legs[0].duration.value < bestRoute.legs[0].duration.value) {
+          bestRoute = route;
+        }
+      }
+      drivingRenderer.setDirections({ ...res, routes: [bestRoute] });
+
+      const leg = bestRoute.legs[0];
+      distancia = leg.distance?.text || '';
+      duracionAuto = leg.duration?.text || '';
+    } else {
+      huboError = true;
+    }
+    mostrarRespuesta();
+  });
+
+  // 🚶 Ruta a PIE
+  this.directionsService.route({
+    origin: origen,
+    destination: destinoCoords,
+    travelMode: google.maps.TravelMode.WALKING,
+    provideRouteAlternatives: true
+  }, (res: any, status: any) => {
+    if (status === 'OK' && res && res.routes && res.routes.length > 0) {
+      let fastestRoute = res.routes[0];
+      for (const route of res.routes) {
+        if (route.legs[0].duration.value < fastestRoute.legs[0].duration.value) {
+          fastestRoute = route;
+        }
+      }
+
+      const walkingRenderer = new google.maps.DirectionsRenderer({
+        suppressMarkers: true,
+        polylineOptions: { strokeColor: '#0000FF', strokeOpacity: 0.9, strokeWeight: 5 },
+        preserveViewport: true
+      });
+      walkingRenderer.setMap(this.map);
+      this.activeDirectionsRenderers.push(walkingRenderer);
+      walkingRenderer.setDirections({ ...res, routes: [fastestRoute] });
+
+      const legFastest = fastestRoute.legs[0];
+      duracionCaminando = legFastest.duration?.text || '';
+    } else {
+      huboError = true;
+    }
+    mostrarRespuesta();
+  });
+}
+
+
+/**
+   * Cambia el icono de un marcador específico por su título.
+   * @param markerTitle El título del marcador a modificar.
+   * @param iconUrl La URL del nuevo ícono.
+   */
+  private setMarkerIcon(markerTitle: string, iconUrl: string): void {
+    const marker = this.placedMarkers.get(markerTitle);
+    if (marker) {
+      marker.setIcon({
+        url: iconUrl,
+        scaledSize: new google.maps.Size(40, 40)
+      });
+    }
+  }
+
+
 
   addMarkers(): void {
     this.pointsOfInterest.forEach((poi: PointOfInterest, i: number) => {
@@ -1059,4 +1258,54 @@ export class MapaComponent implements OnInit, OnDestroy {
     }
     return closestPoint;
   }
+
+
+// Call this method inside the watchPosition success callback
+// En mapa.component.ts
+
+private updateUserMarker(): void {
+  // ✅ PRIMERA COMPROBACIÓN: Asegurarse de que userLocation y el mapa existan
+  if (!this.userLocation || !this.map) {
+    return; // No hacer nada si no hay ubicación o mapa
+  }
+
+  // ✅ SEGUNDA COMPROBACIÓN: Manejar la posibilidad de que el marcador sea null
+  if (!this.userMarker) {
+    // Si el marcador NO existe, lo creamos por primera vez
+    const iconUrl = 'https://maps.gstatic.com/mapfiles/ms2/micons/ltblue-dot.png';
+
+    this.userMarker = new google.maps.Marker({
+      position: this.userLocation,
+      map: this.map,
+      title: 'Tu ubicación actual',
+      icon: {
+        url: iconUrl,
+        scaledSize: new google.maps.Size(40, 40)
+      }
+    });
+
+  } else {
+    // Si el marcador SÍ existe, simplemente actualizamos su posición
+    this.userMarker.setPosition(this.userLocation);
+  }
+}
+
+// A helper method to update and open the InfoWindow
+private updateAndOpenInfoWindow(): void {
+  if (this.infoWindow && this.userLocation) {
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ location: this.userLocation }, (results: any, status: any) => {
+      if (status === 'OK' && results[0]) {
+        const direccion = results[0].formatted_address;
+        this.userAddress = direccion;
+        this.infoWindow!.setContent(`<b>Estás en:</b><br>${direccion}`);
+        if (this.userMarker) {
+          this.infoWindow!.open(this.map, this.userMarker);
+        }
+      } else {
+        console.warn('No se pudo obtener dirección:', status);
+      }
+    });
+  }
+}
 }

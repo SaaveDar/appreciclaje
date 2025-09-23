@@ -5,7 +5,8 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: 'root', // Coloca tu contraseña si tiene
-  database: 'reciclaje_inteligente' // Este debe ser el nombre de tu base de datos
+  database: 'reciclaje_inteligente', // Este debe ser el nombre de tu base de datos
+  dateStrings: true // 👈 evita que convierta a Date
 });
 
 // Establece la conexión

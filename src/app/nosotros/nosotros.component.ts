@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { SessionService } from '../servicios/session.service';
 
 @Component({
   selector: 'app-nosotros',
@@ -8,4 +9,6 @@ import { Component } from '@angular/core';
 })
 export class NosotrosComponent {
 
+   constructor(private sessionService: SessionService) {
+}
 }

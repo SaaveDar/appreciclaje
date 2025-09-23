@@ -3,9 +3,10 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, Router, NavigationStart } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from './servicios/auth.service';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { filter } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
+import { SessionService } from './servicios/session.service';
 
 @Component({
   selector: 'app-root',
@@ -15,7 +16,7 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  title = 'EcoRecicla';
+  title = 'EcoSMART';
   isLoggedIn: boolean = false;
   menuVisible = false;
   sidebarOpen = false;
@@ -37,9 +38,11 @@ export class AppComponent implements OnInit {
   registroUbicacion = '';
   registroExitoso = false;
 
-  usuarioLogueado: any = null;
+  //usuarioLogueado: any = null;
   menuVisibleSidebar = false;
-
+// Actualización: El tipo de usuario ahora está incluido en el objeto usuarioLogueado
+  usuarioLogueado: { id?: number, nombre?: string, correo?: string, tipo_usuario?: 'administrador' | 'estandar' | 'docente' } | null = null;
+  
   registroTipoDoc: string = 'DNI';
   registroDocumento: string = '';
   registroApellidos: string = '';
@@ -61,56 +64,63 @@ export class AppComponent implements OnInit {
   correoRecuperacion: string = '';
   mensajeErrorRecuperacion: string = '';
 
-  
+    // ✅ Nuevas variables para la calificación
+  mostrarModalCalificacion: boolean = false;
+  calificacion: number = 0;
+  mensajeCalificacion: string = '';
+
   constructor(
-    private authService: AuthService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private cd: ChangeDetectorRef,
-    private zone: NgZone,
-    private router: Router
-  ) {}
+  private authService: AuthService,
+  @Inject(PLATFORM_ID) private platformId: Object,
+  private cd: ChangeDetectorRef,
+  private zone: NgZone,
+  private router: Router,
+  private sessionService: SessionService,
+  private http: HttpClient // ✅ Importar HttpClient para hacer la solicitud
+) {}
 
-  ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      this.API_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:3000/api'
-        : 'https://comunidadvmapps.com/api.php';
+ngOnInit() {
+  if (isPlatformBrowser(this.platformId)) {
+    this.API_URL = window.location.hostname === 'localhost'
+      ? 'http://localhost:3000/api'
+      : 'https://comunidadvmapps.com/api.php';
 
-      this.actualizarEstadoConexion(navigator.onLine);
+    this.actualizarEstadoConexion(navigator.onLine);
 
-      window.addEventListener('online', () => {
-        this.zone.run(() => {
-          this.actualizarEstadoConexion(true);
-          this.cd.detectChanges();
-        });
+    window.addEventListener('online', () => {
+      this.zone.run(() => {
+        this.actualizarEstadoConexion(true);
+        this.cd.detectChanges();
       });
+    });
 
-      window.addEventListener('offline', () => {
-        this.zone.run(() => {
-          this.actualizarEstadoConexion(false);
-          this.cd.detectChanges();
-        });
+    window.addEventListener('offline', () => {
+      this.zone.run(() => {
+        this.actualizarEstadoConexion(false);
+        this.cd.detectChanges();
       });
+    });
 
-      const usuarioGuardado = sessionStorage.getItem('usuario');
-      if (usuarioGuardado) {
-        this.usuarioLogueado = JSON.parse(usuarioGuardado);
-        this.isLoggedIn = true;
-      }
-
-      this.router.events
-        .pipe(filter(event => event instanceof NavigationStart))
-        .subscribe(event => {
-          const nav = event as NavigationStart;
-          const rutasProtegidas = ['/mapa', '/juego'];
-          const user = sessionStorage.getItem('usuario');
-
-          if (!user && rutasProtegidas.some(ruta => nav.url.includes(ruta))) {
-            this.router.navigate(['/'], { replaceUrl: true });
-          }
-        });
+    const usuarioGuardado = sessionStorage.getItem('usuario');
+    if (usuarioGuardado) {
+      this.usuarioLogueado = JSON.parse(usuarioGuardado);
+      this.isLoggedIn = true;
     }
+
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationStart))
+      .subscribe(event => {
+        const nav = event as NavigationStart;
+        const rutasProtegidas = ['/mapa', '/juego'];
+        const user = sessionStorage.getItem('usuario');
+
+        if (!user && rutasProtegidas.some(ruta => nav.url.includes(ruta))) {
+          this.router.navigate(['/'], { replaceUrl: true });
+        }
+      });
   }
+}
+
 
   actualizarEstadoConexion(conectado: boolean) {
     this.estadoConexion = conectado ? 'online' : 'offline';
@@ -217,12 +227,14 @@ export class AppComponent implements OnInit {
 
     this.authService.loginUsuario(credenciales).subscribe({
       next: (res: any) => {
+        // Asume que la respuesta incluye el tipo de usuario (e.g., res.usuario.tipo_usuario)
         this.usuarioLogueado = res.usuario;
 
         if (isPlatformBrowser(this.platformId)) {
           sessionStorage.setItem('usuario_id', String(res.usuario.id));
           sessionStorage.setItem('usuario_nombre', res.usuario.nombre);
           sessionStorage.setItem('token', res.token);
+          // Guarda el tipo de usuario en el sessionStorage
           sessionStorage.setItem('usuario', JSON.stringify(res.usuario));
         }
 
@@ -445,4 +457,87 @@ export class AppComponent implements OnInit {
     });
   }
   
+  
+// ✅ Nuevos métodos para la calificación (localhost y producción)
+abrirModalCalificacion() {
+  if (this.usuarioLogueado) {
+    this.mostrarModalCalificacion = true;
+
+    // 📌 Detectar si es PHP o Node.jss
+    const url = this.API_URL.includes('api.php')
+      ? `${this.API_URL}?accion=calificacion_usuario&id_usuario=${this.usuarioLogueado.id}`
+      : `${this.API_URL}/calificacion_usuario/${this.usuarioLogueado.id}`;
+
+
+    this.http.get(url).subscribe({
+      next: (res: any) => {
+        this.calificacion = res.puntuacion ?? 0;
+      },
+      error: (err) => {
+        console.error('Error al obtener calificación previa:', err);
+        this.calificacion = 0; // Si hay error, resetea
+      }
+    });
+
+    this.mensajeCalificacion = '';
+  }
+}
+
+cerrarModalCalificacion() {
+  this.mostrarModalCalificacion = false;
+}
+
+setCalificacion(puntuacion: number) {
+  this.calificacion = puntuacion;
+}
+
+enviarCalificacion() {
+  if (this.calificacion === 0) {
+    this.mensajeCalificacion = '❌ Por favor, selecciona al menos una estrella.';
+    return;
+  }
+
+  const data = {
+    id_usuario: this.usuarioLogueado?.id,
+    puntuacion: this.calificacion
+  };
+
+  // 📌 Detectar si es PHP o Node.js
+  const url = this.API_URL.includes('api.php')
+  ? `${this.API_URL}?consulta=calificar`
+  : `${this.API_URL}/calificar`;
+
+
+  // 📌 En PHP siempre es POST, en Node.js también POST
+  this.http.post(url, data).subscribe({
+    next: (res: any) => {
+      this.mensajeCalificacion = res.mensaje || '✅ ¡Gracias por tu calificación!';
+      setTimeout(() => {
+        this.cerrarModalCalificacion();
+        this.mensajeCalificacion = '';
+      }, 2000);
+    },
+    error: (err) => {
+      console.error('Error al enviar calificación:', err);
+      this.mensajeCalificacion = '❌ Ocurrió un error al guardar tu calificación.';
+    }
+  });
+}
+
+onlyNumbers(event: KeyboardEvent) {
+  const charCode = event.which ? event.which : event.keyCode;
+
+  // Permite solo números (0–9)
+  if (charCode < 48 || charCode > 57) {
+    event.preventDefault();
+  }
+}
+
+blockPaste(event: ClipboardEvent) {
+  const pastedInput: string = event.clipboardData?.getData('text') || '';
+  if (!/^\d+$/.test(pastedInput)) {
+    event.preventDefault(); // bloquea si lo pegado no son solo dígitos
+  }
+}
+
 }

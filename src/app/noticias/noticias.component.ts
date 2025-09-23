@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SafeUrlPipe } from '../servicios/safe-url.pipe';
 import { AuthService } from '../servicios/auth.service';
 import { ChangeDetectorRef } from '@angular/core';
+import { SessionService } from '../servicios/session.service';
 
 @Component({
   selector: 'app-noticias',
@@ -20,7 +21,8 @@ export class NoticiasComponent {
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sessionService: SessionService,
   ) {
     if (isPlatformBrowser(this.platformId)) {
       // Mostrar usuario guardado si ya estaba logueado

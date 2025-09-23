@@ -1,0 +1,588 @@
+.perfil-contenedor {
+  max-width: 720px;
+  margin: 3rem auto;
+  padding: 3rem;
+  background-color: #f8fbf9;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #212121;
+  transition: all 0.3s ease;
+}
+
+.perfil-contenedor h2 {
+  font-size: 2.2rem;
+  margin-bottom: 1.8rem;
+  text-align: center;
+  color: #1b5e20;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  padding: 1.6rem;
+  background-color: #ffffff;
+  border: 1px solid #c8e6c9;
+  border-radius: 18px;
+}
+
+.stats p {
+  margin: 0;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  color: #424242;
+}
+
+.stats strong {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.cursos-canje {
+  background-color: #e8f5e9;
+  padding: 2.2rem;
+  border-radius: 18px;
+  border: 1px solid #aed581;
+  transition: background-color 0.3s;
+}
+
+.cursos-canje h3 {
+  font-size: 1.7rem;
+  margin-bottom: 1.4rem;
+  color: #388e3c;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.cursos-canje ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cursos-canje li {
+  background-color: #ffffff;
+  padding: 1rem 1.4rem;
+  margin-bottom: 0.8rem;
+  border-radius: 12px;
+  border-left: 6px solid #66bb6a;
+  font-size: 1.15rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cursos-canje li:hover {
+  background-color: #f1f8e9;
+}
+
+.cursos-canje p {
+  margin: 0;
+  font-style: italic;
+  color: #555;
+  text-align: center;
+}
+
+/* Responsive para móviles */
+@media (max-width: 600px) {
+  .perfil-contenedor {
+    padding: 2rem 1rem;
+    margin: 1.5rem;
+  }
+
+  .perfil-contenedor h2 {
+    font-size: 1.8rem;
+  }
+
+  .stats p {
+    font-size: 1.05rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .cursos-canje h3 {
+    font-size: 1.4rem;
+  }
+
+  .cursos-canje li {
+    font-size: 1rem;
+  }
+}
+
+
+/* perfil.component.css */
+
+.perfil-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tabs {
+  display: flex;
+  justify-content: flex-start;
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  padding: 0.75rem 1.5rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+}
+
+.tab.active {
+  color: #1976d2;
+  border-color: #1976d2;
+}
+
+.contenido {
+  padding: 1rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-responsive {
+  overflow-x: auto;
+}
+
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.tabla-usuarios th,
+.tabla-usuarios td {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.tabla-usuarios th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+/* Filtros */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filtros input[type="text"],
+.filtros select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  min-width: 150px;
+}
+
+.lista-cursos {
+  list-style: none;
+  padding-left: 1rem;
+}
+
+.lista-cursos li {
+  margin-bottom: 0.5rem;
+}
+
+/* 🔍 Ajustes responsive */
+@media (max-width: 600px) {
+  .tabs {
+    flex-direction: column;
+  }
+
+  .tab {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .filtros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtros input[type="text"],
+  .filtros select {
+    width: 100%;
+  }
+
+  .perfil-container {
+    padding: 1rem;
+  }
+
+  .titulo {
+    font-size: 20px;
+  }
+}
+
+/* Estilo general del modal */
+dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fff;
+  margin: auto;
+}
+
+/* Título del modal */
+dialog h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
+  text-align: center;
+  color: #2c3e50;
+}
+
+/* Formulario centrado y columnas alineadas */
+dialog form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inputs y selects */
+dialog form input,
+dialog form select {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+dialog form input:focus,
+dialog form select:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+/* Botones alineados */
+dialog form div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Estilo de botones */
+dialog form button {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* Botón Guardar */
+dialog form button[type="submit"] {
+  background-color: #4CAF50;
+  color: white;
+}
+
+dialog form button[type="submit"]:hover {
+  background-color: #45a049;
+}
+
+/* Botón Cancelar */
+dialog form button[type="button"] {
+  background-color: #e74c3c;
+  color: white;
+}
+
+dialog form button[type="button"]:hover {
+  background-color: #c0392b;
+}
+
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1050;
+  transition: opacity 0.3s ease;
+}
+
+.modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal .modal-dialog {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-30px);
+  transition: transform 0.4s ease;
+}
+
+.modal.show .modal-dialog {
+  transform: translateY(0);
+}
+
+.modal-header,
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: none;
+  font-weight: bold;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.modal-body {
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  color: #333;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.btn-close:hover {
+  color: #dc3545;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-top: 1px solid #dee2e6;
+}
+
+
+/* 🌟 Estilo base de la tabla */
+.tabla-cursos {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  margin-top: 1.5rem;
+}
+
+/* 🧠 Encabezados */
+.tabla-cursos th {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  color: #ffffff;
+  text-align: left;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 📘 Celdas */
+.tabla-cursos td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #eeeeee;
+  font-size: 14px;
+  color: #333333;
+}
+
+/* 🖱️ Hover en filas */
+.tabla-cursos tr:hover {
+  background-color: #f4f6f8;
+  transition: background-color 0.3s;
+}
+
+/* 🧾 Responsividad */
+@media (max-width: 768px) {
+  .tabla-cursos {
+    border: 0;
+  }
+
+  .tabla-cursos thead {
+    display: none;
+  }
+
+  .tabla-cursos tr {
+    display: block;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e0e0e0;
+  }
+
+  .tabla-cursos td {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    text-align: right;
+    font-size: 13px;
+  }
+
+  .tabla-cursos td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #1976d2;
+    text-align: left;
+  }
+}
+
+
+/* Contenedor de botones: separados y responsivos */
+.botones-cursos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+  justify-content: flex-start;
+}
+
+/* Estilo general de los botones */
+.botones-cursos button {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #ffffff;
+  background: linear-gradient(135deg, #388e3c, #2e7d32);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: background 0.3s, transform 0.2s;
+}
+
+/* Hover efecto */
+.botones-cursos button:hover {
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  transform: scale(1.02);
+}
+
+/* Responsive ajuste: botones al 100% en móviles */
+@media (max-width: 600px) {
+  .botones-cursos {
+    flex-direction: column;
+  }
+
+  .botones-cursos button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+
+.qr-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #f9f9f9;
+  border: 2px solid #e0e0e0;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.qr-container h3 {
+  font-size: 1.4rem;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.qr-container p {
+  margin: 0.5rem 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.qr-container qrcode {
+  display: inline-block;
+  margin-top: 1rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.qr-detalle {
+  font-size: 0.8rem;
+  color: gray;
+  word-break: break-all;
+  background: #f0f0f0;
+  padding: 0.3rem;
+  border-radius: 0.3rem;
+}
+
+
+.qr-bonus-texto {
+  background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 0.8s ease;
+}
+
+.qr-bonus-texto h3 {
+  color: #2e7d32;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.qr-bonus-texto p {
+  color: #424242;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Animación suave al aparecer */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -221,3 +221,17 @@ INSERT INTO sesion_cursos (id_curso, sesion, subtitulo, descripcion, contenido, 
 
 ('1', 'Sesion 3', 'Gestión de Residuos Sólidos', 'Explora técnicas de manejo adecuado de residuos sólidos en empresas y hogares.', 'Módulo 1: Clasificación de residuos. Módulo 2: Procesos de reciclaje industrial. Módulo 3: Programas de reducción de residuos.', 'https://tusitio.com/assets/images/gestion_residuos.jpg', 'https://tusitio.com/cursos/gestion-ambiental/sesion-3', 'https://tusitio.com/videos/gestion_residuos.mp4', 1,1);
 
+CREATE TABLE sugerencias (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  sugerencia TEXT NOT NULL,
+  fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE calificaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    puntuacion INT NOT NULL,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+);

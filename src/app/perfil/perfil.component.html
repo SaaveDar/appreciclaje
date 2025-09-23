@@ -66,12 +66,12 @@
        <table class="tabla-usuarios">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>#</th>
               <th>Nombres y Apellidos</th>
               <th>Correo</th>
               <th>Tipo</th>
               <th>Ultimo acceso</th>
-              <th *ngIf="usuarioLogueado?.tipo_usuario === 'administrador'">Acción</th>
+              <th *ngIf="usuarioLogueado?.tipo_usuario === 'administrador'">¿Registro Historial?</th>
             </tr>
           </thead>
           <tbody>
@@ -361,5 +361,96 @@
         [errorCorrectionLevel]="'M'">
       </qrcode>
     </div>
+
+    <!-- Botón Sugerencias -->
+<div *ngIf="['estandar', 'docente'].includes(tipoUsuario)" class="sugerencias-btn">
+  <button (click)="modalSugerencia.showModal()">💡 Sugerencias</button>
+</div>
+
+
+<!-- Modal Sugerencias -->
+<dialog  #modalSugerencia>
+  <h3>💡 Enviar Sugerencia</h3>
+  <form (submit)="enviarSugerencia(); modalSugerencia.close(); $event.preventDefault()">
+    <textarea [(ngModel)]="textoSugerencia" 
+              name="sugerencia" 
+              placeholder="Escribe tu sugerencia aquí..." 
+              rows="5"
+              maxlength="200" 
+              required></textarea>
+               <!-- contador de caracteres -->
+    <div class="contador">
+      {{ textoSugerencia.length || 0 }}/200
+    </div>
+    <div class="acciones-modal">
+      <button type="submit" [disabled]="(textoSugerencia.length || 0) > 200">Enviar</button>
+      <button type="button" (click)="modalSugerencia.close()">Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+
+<!-- Solo visible si el usuario es administrador -->
+<div *ngIf="tipoUsuario === 'administrador'" class="tabs-admin">
+  <button 
+    [class.active]="tabActivo === 'sugerencias'" 
+    (click)="tabActivo = 'sugerencias'; verSugerencias()">
+    💡 Ver Sugerencias
+  </button>
+
+  <button 
+    [class.active]="tabActivo === 'calificaciones'" 
+    (click)="tabActivo = 'calificaciones'">
+    ⭐ Ver Calificaciones
+  </button>
+</div>
+
+<!-- Tabla de sugerencias visible SOLO cuando el admin haga clic en "Sugerencias" -->
+<div *ngIf="tipoUsuario === 'administrador' && tabActivo === 'sugerencias'" class="sugerencias-tabla">
+  <h3>📋 Lista de Sugerencias</h3>
+
+  <table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Usuario</th>
+      <th>Fecha y Hora</th>
+      <th>Ver</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let s of sugerencias">
+      <td>{{ s.id }}</td>
+      <td>{{ s.nombre }}</td>
+      <td>{{ s.fecha  }}</td>
+      <td>
+        <!-- Botón con icono de ojo -->
+        <button (click)="abrirModalSugerencia(s)">
+          👁️
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- MODAL para ver sugerencia -->
+<dialog #modalVerSugerencia>
+  <h3>📄 Sugerencia de {{ sugerenciaSeleccionada?.nombre }}</h3>
+  <p>{{ sugerenciaSeleccionada?.sugerencia }}</p>
+
+  <div class="acciones-modal">
+    <button type="button" (click)="cerrarModalSugerencia()">Cerrar</button>
+  </div>
+</dialog>
+
+
+</div>
+
+<!-- TAB CALIFICACIONES (ejemplo futuro) -->
+<div *ngIf="tipoUsuario === 'administrador' && tabActivo === 'calificaciones'" class="tabla-calificaciones">
+  <h3>⭐ Calificaciones de Usuarios</h3>
+  <p>Aquí mostrarás las calificaciones...</p>
+</div>
+
 
 </div>

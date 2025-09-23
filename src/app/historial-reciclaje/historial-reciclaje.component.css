@@ -76,13 +76,18 @@ h2 {
     box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
     width: 90%;
     max-width: 500px;
-    transform: scale(0.95);
+    transform: translate(-50%, -50%) scale(0.95);
     transition: transform 0.3s ease;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin: 0;
 }
 
 .modal.show .modal-dialog {
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
 }
+
 
 .modal-header {
     display: flex;
@@ -209,3 +214,137 @@ h2 {
     color: #4caf50;
     text-decoration: none;
 }
+
+
+.error {
+  color: red;
+  font-size: 0.85em;
+}
+
+
+/* estilo de ojo */
+
+.btn-eye-green {
+  background-color: #28a745;  /* Verde */
+  border: none;               /* Sin borde */
+  padding: 8px 12px;          /* Espaciado */
+  cursor: pointer;            /* Mano al pasar */
+  font-size: 1.4rem;          /* Tamaño del icono */
+  color: #fff;                /* Icono blanco */
+  border-radius: 5px;         /* Bordes redondeados */
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-eye-green:hover {
+  background-color: #218838;  /* Verde más oscuro */
+  transform: scale(1.2);      /* Pequeño zoom */
+}
+
+.btn-eye-green:focus {
+  outline: none;              /* Sin borde de foco */
+}
+
+
+/** MENSAJE MODAL **/
+
+#mensajeModal .modal-header {
+  border-bottom: none;
+}
+
+#mensajeModal .modal-footer {
+  border-top: none;
+}
+
+
+.historial-label {
+  font-weight: bold;
+  color: #2e7d32; /* verde oscuro */
+}
+
+
+/** modal de imagen **/
+/* Estilos para el modal y la imagen */
+
+
+
+.img-fluid {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain; /* Esencial para que la imagen se ajuste sin salirse */
+  display: block; /* Para eliminar el espacio en blanco debajo de la imagen */
+}
+
+
+/* Estilos extra para responsive tabla */
+/* Scroll vertical por defecto */
+.table-responsive {
+  margin: 0 auto; /* centra el contenedor */
+  width: 70%;     /* ajusta el ancho */
+}
+
+
+/* Modo tarjeta en pantallas pequeñas */
+@media (max-width: 576px) {
+ table.table thead {
+ display: none;
+ }
+
+ table.table tbody tr {
+ display: block;
+ margin-bottom: 1rem;
+ border: 1px solid #ddd;
+ border-radius: 8px;
+ padding: 0.75rem;
+ background: #fff;
+ /* This is the key change to align everything inside the card */
+ text-align: right;
+ }
+
+ table.table tbody td {
+ display: flex;
+ justify-content: space-between;
+ padding: 0.5rem 0;
+ border: none;
+ }
+
+ table.table tbody td::before {
+ content: attr(data-label);
+ font-weight: bold;
+ margin-right: 110px;
+ color: #333;
+}
+
+/* Diseño profesional */
+.select2-container .select2-selection--single {
+  height: 42px !important;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.select2-container--default .select2-results__option--highlighted {
+  background-color: #3b82f6 !important;
+  color: #fff !important;
+}
+
+}
+
+.texto-derecha {
+  text-align: right;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  max-width: 350px; /* 🔹 Máximo tamaño en pantallas grandes */
+
+}
+
+canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+

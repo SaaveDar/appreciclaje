@@ -25,20 +25,20 @@
 
 
   <div class="info">
-    <h1>🌍 Bienvenido a EcoRecicla</h1>
+    <h1>🌍 Bienvenido a EcoSMART</h1>
     <p>Una app web inteligente que promueve el reciclaje y el cuidado del medio ambiente.</p>
   </div>
 </section>
 
 <section class="info-app">
-  <h2>¿Qué es EcoRecicla?</h2>
+  <h2>¿Qué es EcoSMART?</h2>
   <p>
-    EcoRecicla es una aplicación educativa e interactiva que promueve el reciclaje inteligente y la conciencia ambiental. A través de funciones inteligentes, ayudamos a las personas a identificar, clasificar y gestionar residuos correctamente.
+    EcoSMART es una aplicación educativa e interactiva que promueve el reciclaje inteligente y la conciencia ambiental. A través de funciones inteligentes, ayudamos a las personas a identificar, clasificar y gestionar residuos correctamente.
   </p>
 </section>
 
 <section class="caracteristicas">
-  <h2>¿Qué puedes hacer con EcoRecicla?</h2>
+  <h2>¿Qué puedes hacer con EcoSMART?</h2>
   <div class="cards">
     <div class="card">
       <img src="assets/icons/mapa.png" alt="Mapa">
@@ -83,5 +83,15 @@
     y compite con otros por el título de <strong>Héroe del Planeta</strong>.  
     Cada botella, lata o papel que recicles suma para un futuro más verde... ¡y para tu marcador!
   </p>
-  <button class="boton-principal" (click)="abrirRegistro()">Únete ahora</button>
+
+  <!-- Si no ha iniciado sesión -->
+  <button *ngIf="!isLoggedIn" class="boton-principal" (click)="abrirRegistro()">
+    Únete ahora
+  </button>
+
+  <!-- Si ya está logueado -->
+  <button *ngIf="isLoggedIn" class="boton-principal" (click)="irAJuegos()">
+    Jugar como {{ usuarioNombre || 'Invitado' }} 🎮
+  </button>
 </section>
+

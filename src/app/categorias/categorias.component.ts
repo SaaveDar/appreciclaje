@@ -17,6 +17,7 @@ import {
   style,
   animate
 } from '@angular/animations';
+import { SessionService } from '../servicios/session.service';
 
 @Component({
   selector: 'app-categorias',
@@ -51,6 +52,7 @@ export class CategoriasComponent implements OnInit, OnDestroy {
     private tiposService: TiposResiduosService,
     private socketService: SocketService,
     private cdr: ChangeDetectorRef,
+    private sessionService: SessionService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);

@@ -4,6 +4,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import confetti from 'canvas-confetti';
+import { SessionService } from '../servicios/session.service';
 
 interface Pregunta {
   pregunta: string;
@@ -83,7 +84,7 @@ export class JuegoComponent implements OnInit {
         },
         {
           pregunta: '¿Qué color representa los residuos orgánicos?',
-          opciones: ['Rojo', 'Verde', 'Negro', 'Amarillo'],
+          opciones: ['Rojo', 'Verde', 'Marrón', 'Amarillo'],
           respuesta: 2
         },
         {
@@ -255,6 +256,7 @@ export class JuegoComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private router: Router,
+    private sessionService: SessionService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 

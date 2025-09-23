@@ -30,15 +30,17 @@
         <div class="texto-bienvenida" (click)="toggleMenu()" style="cursor: pointer;">
           <!-- Se asume que usuarioLogueado.nombre existe, si no, puedes usar usuarioLogueado.correo -->
           <p class="saludo">¡Bienvenido,</p>
-          <p class="nombre-usuario">{{ usuarioLogueado.nombre  }}!</p>
+          <p class="nombre-usuario">{{ usuarioLogueado?.nombre  }}!</p>
           
         </div>
 
         <!-- Menú desplegable del usuario (Cambiar contraseña, Cerrar sesión) -->
         <div class="menu-usuario" *ngIf="menuVisible">
           <button class="btn-opcion" (click)="irAPerfil()">Mi perfil</button>
-          <button class="btn-opcion" (click)="irACursos()">Cursos</button> <!-- NUEVO BOTÓN -->
-          <button class="btn-opcion" (click)="irAHistorial()">Historial de Reciclaje</button> <!-- NUEVO BOTÓN -->
+          <!-- El botón "Cursos" solo se muestra para administradores, estándar y docentes -->
+          <button class="btn-opcion" (click)="irACursos()">Cursos</button>
+          <!-- El botón "Historial de Reciclaje" se muestra para administradores y estándar -->
+          <button class="btn-opcion" (click)="irAHistorial()" *ngIf="usuarioLogueado?.tipo_usuario !== 'docente'">Historial de Reciclaje</button>
           <button class="btn-opcion" (click)="cambiarContrasena()">Cambiar contraseña</button>
           <button class="btn-opcion cerrar" (click)="cerrarSesion()">Cerrar sesión</button>
         </div>
@@ -47,6 +49,34 @@
   </div>
 </nav>
 
+<!-- 🟢 Ícono de Calificación, visible solo si el usuario está logueado -->
+<div class="calificacion-wrapper" *ngIf="usuarioLogueado" (click)="abrirModalCalificacion()">
+  <span class="calificacion-icono">⭐</span>
+</div>
+
+<!-- 🟢 Modal de calificación -->
+<div class="modal-calificacion" *ngIf="mostrarModalCalificacion">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Califica EcoSMART</h5>
+      <button type="button" class="btn-close" (click)="cerrarModalCalificacion()">×</button>
+    </div>
+    <div class="modal-body">
+      <p>¡Ayúdanos a mejorar! ¿Cuántas estrellas le das a nuestra app?</p>
+      <div class="estrellas">
+        <span *ngFor="let estrella of [1, 2, 3, 4, 5]"
+              class="estrella"
+              [ngClass]="{'activa': estrella <= calificacion}"
+              (click)="setCalificacion(estrella)">★</span>
+      </div>
+      <p class="mensaje-calificacion">{{ mensajeCalificacion }}</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-primary" (click)="enviarCalificacion()">Enviar</button>
+      <button type="button" class="btn-secondary" (click)="cerrarModalCalificacion()">Cancelar</button>
+    </div>
+  </div>
+</div>
 <!-- Modal Cambiar Contraseña -->
 <div class="modal-cambiar-contrasena" *ngIf="mostrarModalCambiarClave">
   <div class="modal-content">
@@ -107,8 +137,10 @@
           <!-- 🔽 Submenú del usuario en el sidebar -->
           <div class="submenu-opciones" *ngIf="menuVisibleSidebar">
             <button class="btn-opcion" (click)="irAPerfil()">Mi perfil</button>
-            <button class="btn-opcion" (click)="irACursos()">Cursos</button> <!-- NUEVO BOTÓN -->
-            <button class="btn-opcion" (click)="irAHistorial()">Historial de Reciclaje</button> <!-- NUEVO BOTÓN -->
+            <!-- El botón "Cursos" solo se muestra para administradores, estándar y docentes -->
+            <button class="btn-opcion" (click)="irACursos()">Cursos</button>
+            <!-- El botón "Historial de Reciclaje" se muestra para administradores y estándar -->
+            <button class="btn-opcion" (click)="irAHistorial()" *ngIf="usuarioLogueado?.tipo_usuario !== 'docente'">Historial de Reciclaje</button>
             <button class="btn-opcion" (click)="cambiarContrasena()">Cambiar contraseña</button>
             <button class="btn-opcion cerrar" (click)="cerrarSesion()">Cerrar sesión</button>
           </div>
@@ -139,8 +171,9 @@
 
     <!-- Formulario de Login -->
     <form *ngIf="modo === 'login'" (ngSubmit)="login()" class="formulario-login" autocomplete="off">
-      <label for="email">Correo electrónico</label>
-      <input type="email" id="email" [(ngModel)]="loginEmail" name="email" required />
+      <label for="email">Nro Documento</label>
+      <input type="text" id="email" [(ngModel)]="loginEmail" name="email" required (keypress)="onlyNumbers($event)" 
+  (paste)="blockPaste($event)" />
 
       <label for="password">Contraseña</label>
       <input type="password" id="password" [(ngModel)]="loginPassword" name="password" required />
@@ -282,5 +315,5 @@
 
 <!-- Footer de la aplicación -->
 <footer style="background-color: #333; color: white; padding: 1rem; text-align: center; margin-top: auto;">
-  © 2025 EcoRecicla. Todos los derechos reservados.
+  © 2025 EcoSMART. Todos los derechos reservados.
 </footer>
